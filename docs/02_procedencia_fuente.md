@@ -18,4 +18,4 @@ La base se construye mediante:
 - Duplicación Binomial.
 - Eventos de falla inducidos con probabilidad 5%.
 
-Este enfoque garantiza reproducibilidad y control del ground truth.
+Este enfoque garantiza reproducibilidad y control del ground truth que es solo el escenario real y poseedor de la verdad.
