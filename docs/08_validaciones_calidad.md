@@ -9,134 +9,67 @@
 
 # 8. Validaciones de calidad
 
-## 8.1 Marco conceptual de calidad de datos
+La calidad del dataset es fundamental para garantizar que el modelamiento estadístico refleje correctamente el comportamiento simulado del sistema.
 
-La calidad del dataset se evalúa bajo cuatro dimensiones fundamentales:
-
-1. **Integridad estructural**
-2. **Consistencia lógica**
-3. **Coherencia estadística**
-4. **Reproducibilidad del proceso generativo**
-
-Estas dimensiones garantizan que el modelo estadístico opere sobre datos válidos y coherentes.
+Las validaciones se organizan en cuatro niveles:
 
 ---
 
-## 8.2 Validaciones estructurales (nivel blob)
-
-Se verifican condiciones mínimas de integridad:
-
-- `size_bytes >= 0`
-- `content_hash` no nulo
-- `blob_id` único
-- `created_at <= last_modified_at`
-- `path` válido y consistente con la estructura jerárquica definida
-
-Objetivo:
-Evitar inconsistencias que comprometan el análisis probabilístico.
-
----
-
-## 8.3 Validaciones de unicidad y duplicación
-
-Se evalúan tres niveles de control:
-
-### 1️⃣ Unicidad técnica
-- No deben existir duplicados exactos de `(blob_id)`.
-
-### 2️⃣ Duplicación por contenido
-- Identificación de grupos donde `content_hash` se repite.
-- Cálculo de cardinalidad por hash.
-
-### 3️⃣ Duplicación cruzada por path
-- Verificación de replicación inter-directorio.
-- Análisis de concentración por contenedor.
-
-Esto permite validar que la simulación produce correctamente los escenarios Tipo A, B y C definidos previamente.
-
----
-
-## 8.4 Validaciones temporales
+## 8.1 Validaciones estructurales
 
 Se verifica:
 
-- Secuencia continua de días (sin saltos en T).
-- Correspondencia entre `events_daily.day` y agregación de `blob_inventory.created_at`.
-- Coherencia entre incident_flag y volumen observado.
+- `size_bytes >= 0`
+- `content_hash` no nulo
+- unicidad de `blob_id`
+- coherencia entre `created_at` y `last_modified_at`
+- consistencia de la estructura jerárquica del `path`
 
-Prueba clave:
-
-\[
-E[X_t | I_t=1] > E[X_t | I_t=0]
-\]
-
-Si esta condición no se cumple, la simulación estaría mal configurada.
+Estas validaciones aseguran integridad básica del dataset.
 
 ---
 
-## 8.5 Validaciones estadísticas
+## 8.2 Validaciones de duplicación
 
-Se contrasta empíricamente:
+Se comprueba que:
 
-1. Media vs varianza en días normales:
-   \[
-   Var(X_t) \approx E[X_t]
-   \]
+- Los grupos por `content_hash` reflejen correctamente la duplicación simulada.
+- En días con incidente, la proporción de hashes repetidos sea mayor.
+- No existan duplicados inconsistentes fuera del modelo definido.
 
-2. Media vs varianza en días con falla.
-
-3. Tasa promedio observada:
-   \[
-   \bar{duplicate\_rate} \approx p_{ok}
-   \text{ (en días normales)}
-   \]
-
-4. Tasa promedio observada:
-   \[
-   \bar{duplicate\_rate} \approx p_{fail}
-   \text{ (en días con incidente)}
-   \]
-
-Estas verificaciones confirman coherencia entre parámetros teóricos y datos generados.
+Esto garantiza coherencia con los parámetros \(p_{ok}\) y \(p_{fail}\).
 
 ---
 
-## 8.6 Validación de coherencia volumen–TPS
+## 8.3 Validaciones temporales
 
 Se valida que:
 
-\[
-TPS_t = \frac{X_t}{86400}
-\]
+- El número de días sea T = 180.
+- La agregación diaria coincida con la suma de registros en `blob_inventory`.
+- En promedio:
+  \[
+  E[X_t | I_t=1] > E[X_t | I_t=0]
+  \]
 
-y que durante incidentes:
-
-\[
-E[TPS_t | I_t=1] > E[TPS_t | I_t=0]
-\]
-
-Esto garantiza consistencia entre modelo de conteo y métrica derivada.
+Esto confirma que el efecto del factor \(k\) está correctamente implementado.
 
 ---
 
-## 8.7 Escalabilidad y validación en contexto Big Data
+## 8.4 Validaciones estadísticas básicas
 
-Para escenarios de mayor escala (GB–TB):
+Se contrastan empíricamente:
 
-- Validar que la agregación diaria pueda ejecutarse en procesamiento distribuido.
-- Validar particionamiento por fecha.
-- Validar que el cálculo de hash no introduzca sesgo sistemático.
-- Validar consistencia en ejecución paralela.
+- Media aproximada de \(X_t\) cercana a λ en días normales.
+- Media aproximada de \(X_t\) cercana a kλ en días con incidente.
+- Tasa promedio de duplicación cercana a \(p_{ok}\) y \(p_{fail}\) según el estado.
+
+Estas comprobaciones permiten verificar que la simulación respeta el modelo teórico.
 
 ---
 
-## 8.8 Conclusión sobre calidad del dataset
+## 8.5 Consideración de escalabilidad
 
-Las validaciones implementadas aseguran:
+El modelo está diseñado para escalar a volúmenes mayores, trabajando sobre agregaciones y metadatos en lugar de inspección completa del contenido.
 
-- Integridad estructural.
-- Consistencia probabilística.
-- Reproducibilidad experimental.
-- Coherencia entre modelo teórico y datos simulados.
-
-La calidad del dataset es condición necesaria para que los modelos de conteo y duplicación produzcan inferencias válidas.
+Esto es coherente con prácticas de análisis en entornos Big Data.
