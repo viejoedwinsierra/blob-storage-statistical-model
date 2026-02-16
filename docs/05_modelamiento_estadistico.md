@@ -1,12 +1,25 @@
+---
+🏠 [Inicio](../README.md)
+
+⬅️ [Anterior](04_parametros_simulacion.md)
+
+➡️ [Siguiente](06_preguntas_analiticas.md)
+
+---
+
+
 # 5. Modelamiento estadístico
 
-Modelo de conteo:
+## Modelo de conteo
 X_t ~ Poisson(λ_t)
 
-Modelo de duplicación:
+## Modelo de duplicación
 D_t ~ Binomial(X_t, p_t)
 
+## Regresión logística
+log(p_t/(1-p_t)) = α0 + α1 * incident_flag
+
 Hipótesis:
-H1: El volumen diario aumenta en días con falla.
-H2: La tasa de duplicación aumenta en días con falla.
-H3: La TPS aumenta significativamente en días con falla.
+H1: E[X_t|E=1] > E[X_t|E=0]
+H2: p_fail > p_ok
+H3: TPS aumenta en días con falla
