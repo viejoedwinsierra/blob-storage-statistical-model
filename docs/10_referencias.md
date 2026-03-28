@@ -13,7 +13,7 @@
 
 - Tanenbaum, A. S., & Van Steen, M. (2017). *Distributed Systems: Principles and Paradigms* (3rd ed.). Pearson.
 
-- :contentReference[oaicite:0]{index=0}. (2017). O'Reilly Media.
+- Kleppmann, M. (2017). *Designing Data-Intensive Applications*. O'Reilly Media.
 
 ---
 
@@ -37,7 +37,7 @@
 
 ## Ingeniería de confiabilidad y fallas
 
-- :contentReference[oaicite:1]{index=1}. (2016). O'Reilly Media.
+- Beyer, B., Jones, C., Petoff, J., & Murphy, N. (2016). *Site Reliability Engineering: How Google Runs Production Systems*. O'Reilly Media.
 
 - Hamilton, J. D. (1994). *Time Series Analysis*. Princeton University Press.  
   (Modelos de cambio de régimen)
@@ -46,16 +46,16 @@
 
 ## Cloud y almacenamiento de objetos
 
-- :contentReference[oaicite:2]{index=2}. (2023). *Azure Blob Storage Documentation*.  
+- Microsoft Azure. (2023). *Azure Blob Storage Documentation*.  
   https://learn.microsoft.com/en-us/azure/storage/blobs/
 
-- :contentReference[oaicite:3]{index=3}. (2023). *Amazon S3 Storage and Pricing Documentation*.  
+- Amazon Web Services (AWS). (2023). *Amazon S3 Storage and Pricing Documentation*.  
   https://aws.amazon.com/s3/pricing/
 
 ---
 
 ## Conceptos clave utilizados
 
-- :contentReference[oaicite:4]{index=4}  
-- :contentReference[oaicite:5]{index=5}  
-- :contentReference[oaicite:6]{index=6}  
+- Proceso de Poisson (Ross, 2014)  
+- Distribución binomial (Casella & Berger, 2002)  
+- Modelos de cambio de régimen (Hamilton, 1994)  
