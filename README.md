@@ -28,6 +28,27 @@ permitiendo evaluar el impacto del comportamiento del sistema en el costo y la e
 
 ---
 
+## 🎯 Sistema de decisión
+
+El objetivo final del modelo es soportar la toma de decisiones sobre el uso del almacenamiento.
+
+A partir del estado del sistema \(x_t\), el modelo permite definir acciones \(u_t\) tales como:
+
+- eliminar datos innecesarios  
+- mover información a almacenamiento frío  
+- optimizar frecuencia de procesamiento  
+- reducir duplicados  
+
+El sistema busca minimizar el costo total:
+
+$$
+J = \sum_{t=1}^{T} C_t
+$$
+
+sujeto al comportamiento dinámico del sistema.
+
+---
+
 ## ⚙️ Arquitectura
 
 Simulación (Airflow DAG) → Storage (S3/Blob) → Procesamiento → Analytics → Decisiones
@@ -260,14 +281,6 @@ Este modelo permite cuantificar cómo las decisiones técnicas impactan el costo
 - un mayor volumen de archivos incrementa el costo de storage
 - una mayor tasa de fallas incrementa requests, reintentos y procesamiento
 - una estrategia deficiente de lifecycle incrementa el costo acumulado
-
-### Costo acumulado
-
-$$
-J = \sum_{t=1}^{T} C_t
-$$
-
-Este valor representa el costo total del sistema durante el horizonte de simulación.
 
 ---
 
