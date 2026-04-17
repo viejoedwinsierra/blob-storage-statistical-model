@@ -6,221 +6,236 @@
 ➡️ [Siguiente](02_rmarco_teorico_blobstorage.md)
 
 ---
-# Marco Teórico: Simulación, Modelado y Optimización de Blob Storage en Entornos Multicloud
+# 3. Marco teórico
 
-## 1. Introducción
+## 3.1 Big Data y Data Engineering
 
-En las arquitecturas modernas basadas en la nube, el almacenamiento de objetos (Object Storage), representado por servicios como AWS S3 y Azure Blob Storage, constituye un componente crítico para la persistencia de datos no estructurados generados por sistemas distribuidos.
+El concepto de Big Data se refiere al manejo de grandes volúmenes de datos caracterizados por las conocidas *5V*: volumen, velocidad, variedad, veracidad y valor (Laney, 2001). En entornos cloud, estos datos son generados por sistemas distribuidos que producen flujos continuos de información.
 
-El crecimiento acelerado del volumen de datos ha convertido la gestión del almacenamiento en un problema no solo técnico, sino también económico y estratégico. En este contexto, las organizaciones requieren herramientas que permitan anticipar el comportamiento del sistema, optimizar costos y garantizar niveles adecuados de rendimiento.
+En arquitecturas modernas, el almacenamiento de objetos (Object Storage) —como AWS S3 y Azure Blob Storage— actúa como repositorio central de datos no estructurados, soportando escalabilidad horizontal prácticamente ilimitada (Kleppmann, 2017).
 
-Este trabajo se fundamenta en el paradigma de las organizaciones data-driven, integrando técnicas de simulación, modelado estadístico y automatización de infraestructura para la toma de decisiones informadas.
+El Data Engineering se encarga de diseñar y operar pipelines que permiten:
 
----
+* ingestión de datos
+* almacenamiento distribuido
+* procesamiento batch y streaming
+* exposición para análisis
 
-## 2. Organizaciones Data-Driven y toma de decisiones
+Un pipeline típico puede representarse como:
 
-Una organización data-driven utiliza datos como base para la toma de decisiones, reemplazando enfoques intuitivos por modelos analíticos.
+$$
+D_{raw} \rightarrow D_{processed} \rightarrow D_{analytical}
+$$
 
-El proceso de toma de decisiones sigue un flujo estructurado:
+donde:
 
-1. Recolección de datos  
-2. Procesamiento y transformación  
-3. Modelado y análisis  
-4. Ejecución de decisiones  
+* $D_{raw}$: datos crudos
+* $D_{processed}$: datos transformados
+* $D_{analytical}$: datos listos para modelado
 
-En el contexto del almacenamiento en la nube, esto implica evolucionar desde una gestión reactiva hacia una gestión predictiva basada en modelos de comportamiento del sistema.
-
----
-
-## 3. Data Engineering como habilitador
-
-El Data Engineering proporciona la infraestructura necesaria para capturar, almacenar y procesar datos.
-
-Un pipeline de datos típico incluye:
-
-- Ingesta de datos (archivos, logs, eventos)
-- Almacenamiento en sistemas de objetos (Blob Storage / S3)
-- Procesamiento (batch o streaming)
-- Análisis y modelado
-
-En este proyecto, el pipeline es simulado, lo que permite controlar variables y evaluar escenarios sin afectar sistemas reales.
+En este proyecto, el pipeline es simulado, lo que permite controlar las variables del sistema y evaluar su comportamiento sin depender de entornos productivos.
 
 ---
 
-## 4. Naturaleza del Blob Storage
+## 3.2 Fundamentos probabilísticos
 
-El almacenamiento de objetos presenta características clave:
+El comportamiento de los sistemas distribuidos puede modelarse mediante herramientas de probabilidad, especialmente en lo referente a la llegada de eventos y generación de artefactos.
 
-- Escalabilidad prácticamente ilimitada  
-- Estructura no relacional  
-- Costos variables basados en uso  
-- Dependencia de patrones de acceso  
+### 3.2.1 Proceso de Poisson
 
-Estas características introducen complejidad en su gestión, ya que el crecimiento no es determinístico y los costos dependen de múltiples factores.
+La llegada de eventos se modela como:
+
+$$
+X_t \sim \text{Poisson}(\lambda)
+$$
+
+donde:
+
+* $X_t$: número de eventos en el tiempo $t$
+* $\lambda$: tasa promedio
+
+Este modelo es apropiado para eventos independientes en el tiempo (Ross, 2014).
 
 ---
 
-## 5. Simulación de tráfico de almacenamiento
+### 3.2.2 Modelo de duplicidad
 
-La simulación permite modelar el comportamiento del sistema bajo diferentes condiciones.
+La ocurrencia de errores o duplicados puede modelarse como:
+
+$$
+D_t \sim \text{Binomial}(X_t, p_{fail})
+$$
+
+donde:
+
+* $D_t$: número de eventos con error
+* $p_{fail}$: probabilidad de falla
+
+Este modelo permite cuantificar la proporción de eventos afectados (Casella & Berger, 2002).
+
+---
+
+### 3.2.3 Cambio de régimen
+
+El sistema puede alternar entre estados:
+
+$$
+incident_t \sim \text{Bernoulli}(p_{incident})
+$$
+
+y:
+
+$$
+\lambda_t =
+\begin{cases}
+\lambda & \text{si } incident_t = 0 \
+k \cdot \lambda & \text{si } incident_t = 1
+\end{cases}
+$$
+
+Esto modela sistemas con comportamiento dinámico bajo condiciones de falla (Hamilton, 1994).
+
+---
+
+## 3.3 Modelos estadísticos
+
+El modelado estadístico permite explicar y predecir el comportamiento del sistema.
+
+### 3.3.1 Regresión lineal
+
+$$
+Y = \beta_0 + \beta_1 X + \epsilon
+$$
+
+donde:
+
+* $Y$: variable respuesta (ej. volumen de almacenamiento)
+* $X$: variable explicativa (ej. número de transacciones)
+* $\epsilon$: error
+
+Este modelo permite identificar tendencias y relaciones lineales.
+
+---
+
+### 3.3.2 Regresión logística
+
+Para modelar la probabilidad de error:
+
+$$
+P(Y=1|X) = \frac{1}{1 + e^{-z}}
+$$
+
+$$
+z = \beta_0 + \sum_{i=1}^{n} \beta_i X_i
+$$
+
+Este modelo es fundamental para clasificación binaria y permite interpretar el impacto de cada variable (Hosmer et al., 2013).
+
+---
+
+### 3.3.3 Modelos de conteo
+
+Para datos discretos:
+
+* Poisson Regression
+* Negative Binomial
+
+Estos modelos permiten capturar sobre-dispersión en los datos.
+
+---
+
+## 3.4 Machine Learning
+
+El Machine Learning permite capturar relaciones complejas no lineales entre variables.
+
+### 3.4.1 Aprendizaje supervisado
+
+Se busca modelar:
+
+$$
+Y = f(X)
+$$
+
+donde:
+
+* $X$: conjunto de variables observables
+* $Y$: variable objetivo (error/no error)
+
+Algoritmos relevantes:
+
+* Random Forest
+* Gradient Boosting
+* XGBoost
+
+Estos modelos capturan interacciones complejas y no linealidades (Hastie et al., 2009).
+
+---
+
+### 3.4.2 Detección de anomalías
+
+Permite identificar patrones inusuales sin etiquetas:
+
+$$
+X_i \notin \mathcal{D}_{normal}
+$$
+
+Métodos:
+
+* Isolation Forest
+* Clustering
+* Autoencoders
+
+Esto es relevante para detectar comportamientos no esperados en almacenamiento.
+
+---
+
+### 3.4.3 Transferencia simulación–realidad
+
+Uno de los principales retos es evaluar:
+
+$$
+\text{Generalización} = f_{sim}(X) \rightarrow f_{real}(X)
+$$
+
+El objetivo es determinar si los patrones aprendidos en datos simulados son transferibles a sistemas reales.
+
+---
+
+## 3.5 Integración con el sistema simulado
 
 El sistema puede representarse como un modelo dinámico:
 
+$$
 x_{t+1} = f(x_t, u_t, w_t)
+$$
 
-Donde:
+donde:
 
-- x_t: estado del sistema (volumen, número de archivos)
-- u_t: decisiones (compresión, eliminación, tiering)
-- w_t: incertidumbre (demanda, variabilidad)
+* $x_t$: estado del sistema
+* $u_t$: decisiones (optimización)
+* $w_t$: incertidumbre
 
-### Ventajas de la simulación
+El costo acumulado se modela como:
 
-- Evaluación de escenarios sin impacto en producción  
-- Reducción de riesgos operativos  
-- Análisis de comportamiento bajo carga  
-- Validación de estrategias de optimización  
-- Proyección de crecimiento  
+$$
+J_T = \mathbb{E} \left[ \sum_{t=1}^{T} C(x_t, u_t, w_t) \right]
+$$
 
----
+Este modelo permite integrar:
 
-## 6. Modelado estadístico del crecimiento
-
-El crecimiento del almacenamiento puede modelarse mediante regresión:
-
-Y = β0 + β1 X + ε
-
-Donde:
-
-- Y: volumen de almacenamiento  
-- X: número de transacciones  
-- ε: error aleatorio  
-
-Este enfoque permite:
-
-- Identificar tendencias  
-- Cuantificar incertidumbre  
-- Predecir comportamiento futuro  
-
-Se pueden incorporar modelos más avanzados como:
-
-- Series de tiempo  
-- Simulación Monte Carlo  
-- Modelos probabilísticos  
+* simulación
+* estadística
+* machine learning
+* optimización
 
 ---
 
-## 7. Proyección de crecimiento y performance
+## Referencias
 
-La proyección permite anticipar:
-
-- Crecimiento del almacenamiento  
-- Costos futuros  
-- Impacto en latencia y rendimiento  
-
-Esto habilita decisiones como:
-
-- Cuándo escalar  
-- Cuándo archivar datos  
-- Cómo optimizar el uso del storage  
-
----
-
-## 8. Infraestructura como Código (IaC) y Terraform
-
-Terraform es una herramienta de Infraestructura como Código (IaC) que permite definir y gestionar recursos cloud mediante código declarativo.
-
-### Importancia en entornos multicloud
-
-Terraform permite:
-
-- Definir infraestructura en AWS y Azure de manera uniforme  
-- Evitar dependencia de un solo proveedor (vendor lock-in)  
-- Reproducir ambientes de forma consistente  
-- Versionar la infraestructura  
-
-En el contexto del proyecto:
-
-- Permite desplegar entornos de simulación en múltiples nubes  
-- Facilita la comparación de costos y desempeño  
-- Automatiza la creación de pipelines de datos  
-
----
-
-## 9. Terraform y optimización de costos
-
-El uso de Terraform contribuye directamente a la optimización de costos:
-
-### 9.1 Control de ambientes
-
-- Creación y destrucción automática de entornos  
-- Evita recursos innecesarios activos  
-- Permite entornos efímeros para pruebas  
-
-### 9.2 Estandarización
-
-- Configuraciones repetibles y optimizadas  
-- Eliminación de errores manuales  
-- Uso de mejores prácticas (best practices)
-
-### 9.3 Simulación de escenarios
-
-- Permite desplegar múltiples arquitecturas  
-- Comparar configuraciones (cost vs performance)  
-- Evaluar estrategias antes de producción  
-
----
-
-## 10. Multicloud como estrategia
-
-El enfoque multicloud permite:
-
-- Comparar proveedores (AWS vs Azure)  
-- Optimizar costos según el servicio  
-- Mejorar resiliencia del sistema  
-- Evitar dependencia tecnológica  
-
-En este proyecto, el multicloud es fundamental para:
-
-- Validar modelos en diferentes entornos  
-- Comparar costos de almacenamiento  
-- Evaluar desempeño del sistema  
-
----
-
-## 11. Integración del modelo con decisiones de negocio
-
-El sistema puede extenderse a un modelo de optimización:
-
-J_T = E [ Σ C(x_t, u_t, w_t) ]
-
-Donde:
-
-- C: función de costo  
-- J_T: costo acumulado esperado  
-
-Esto permite:
-
-- Minimizar costos a largo plazo  
-- Optimizar decisiones dinámicas  
-- Evaluar impacto económico de estrategias  
-
----
-
-## 12. Conclusión
-
-La simulación de tráfico en sistemas de Blob Storage permite transformar un problema operativo en un problema analítico y optimizable.
-
-El uso combinado de:
-
-- Modelos estadísticos  
-- Simulación  
-- Infraestructura como código (Terraform)  
-- Estrategias multicloud  
-
-permite diseñar soluciones eficientes, escalables y económicamente optimizadas.
-
-Este enfoque es consistente con el paradigma de organizaciones data-driven, donde las decisiones se fundamentan en modelos cuantitativos y evidencia empírica.
-
----
+* Casella, G., & Berger, R. (2002). *Statistical Inference*.
+* Hamilton, J. (1994). *Time Series Analysis*.
+* Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning*.
+* Hosmer, D., Lemeshow, S., & Sturdivant, R. (2013). *Applied Logistic Regression*.
+* Kleppmann, M. (2017). *Designing Data-Intensive Applications*.
+* Laney, D. (2001). 3D Data Management.
+* Ross, S. (2014). *Introduction to Probability Models*.
