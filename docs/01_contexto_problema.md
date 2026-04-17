@@ -8,28 +8,30 @@
 
 # 1. Contexto del problema y propósito del análisis
 
-En arquitecturas distribuidas basadas en microservicios, los sistemas de almacenamiento de objetos (*Object Storage*) constituyen la capa persistente donde se materializan los artefactos generados por procesos transaccionales y de integración. Estos sistemas —como los ofrecidos por plataformas cloud— operan bajo un modelo de crecimiento continuo impulsado por la ejecución de múltiples servicios desacoplados, lo que introduce dinámicas complejas de generación, replicación y almacenamiento de datos.
+En arquitecturas distribuidas basadas en microservicios, los sistemas de almacenamiento de objetos (*Object Storage*) constituyen la capa persistente donde se materializan los artefactos generados por procesos transaccionales y de integración. Estos sistemas operan bajo un modelo de crecimiento continuo impulsado por múltiples servicios desacoplados, lo que introduce dinámicas complejas de generación, replicación y almacenamiento de datos (Kleppmann, 2017).
 
-Bajo condiciones normales de operación, el volumen de almacenamiento crece de manera aproximadamente proporcional al número de transacciones ejecutadas. Este comportamiento es consistente con modelos de procesamiento distribuido (Dean & Ghemawat, 2008), donde cada operación puede generar artefactos intermedios y finales que se almacenan de forma persistente. En este contexto, es razonable modelar la llegada de eventos como un proceso de Poisson (Ross, 2014), donde las ocurrencias son independientes y distribuidas en el tiempo.
+Bajo condiciones normales de operación, el volumen de almacenamiento crece de manera aproximadamente proporcional al número de transacciones ejecutadas. Este comportamiento es consistente con modelos de procesamiento distribuido como *MapReduce* (Dean & Ghemawat, 2008), donde cada operación puede generar artefactos intermedios y finales que se almacenan de forma persistente.
 
-Sin embargo, esta aproximación resulta insuficiente cuando el sistema entra en estados de degradación operativa. En presencia de fallas como *timeouts*, reintentos automáticos, errores de idempotencia o inconsistencias en pipelines, la relación entre transacciones y artefactos almacenados deja de ser lineal. En estos escenarios, el sistema presenta un comportamiento amplificado donde una misma transacción lógica puede generar múltiples artefactos físicos.
+Desde una perspectiva probabilística, la llegada de estos eventos puede modelarse mediante un proceso de Poisson, el cual describe la ocurrencia de eventos independientes en el tiempo (Ross, 2014). En este caso, cada transacción puede interpretarse como un evento que genera un artefacto documental, con un tamaño promedio cercano a 1 MB.
 
-Este fenómeno puede formalizarse mediante un factor de amplificación ( k ), tal que la tasa efectiva de generación de archivos se incrementa:
+Sin embargo, esta aproximación se rompe en presencia de fallas operativas. Eventos como *timeouts*, reintentos automáticos, errores de idempotencia o inconsistencias en pipelines introducen comportamientos no lineales en la generación de artefactos. En estos escenarios, una misma transacción lógica puede generar múltiples archivos físicos, alterando la relación esperada entre eventos y almacenamiento (Beyer et al., 2016).
 
-$$
+Este fenómeno puede formalizarse mediante un factor de amplificación ( k ), que modifica la tasa de generación de archivos:
+
+[
 \lambda' = k \cdot \lambda
-$$
+]
 
-donde ( \lambda ) representa la tasa de generación en condiciones normales. En particular, la ausencia de mecanismos robustos de idempotencia —como se discute en (Kleppmann, 2017)— conduce a la generación de duplicados lógicos: archivos con contenido idéntico (mismo hash o firma digital) pero identificadores distintos, lo que impide su eliminación mediante estrategias triviales de deduplicación.
+donde ( \lambda ) representa la tasa de generación bajo condiciones normales. La ausencia de mecanismos adecuados de idempotencia —como se discute en (Kleppmann, 2017)— puede inducir duplicidad lógica, generando múltiples artefactos con contenido idéntico pero identificadores distintos.
 
-Este comportamiento ha sido ampliamente documentado en ingeniería de confiabilidad (Beyer et al., 2016), donde los sistemas distribuidos exhiben patrones significativamente distintos bajo condiciones de fallo. Desde una perspectiva probabilística, esto implica un cambio en el régimen del sistema, el cual puede modelarse mediante procesos estocásticos con cambio de estado (Hamilton, 1994).
+Este tipo de duplicidad ha sido ampliamente estudiado en sistemas de almacenamiento mediante técnicas de deduplicación basadas en contenido (Meyer & Bolosky, 2011), donde se demuestra que el crecimiento redundante puede impactar significativamente la eficiencia del almacenamiento.
 
-En este contexto, el sistema puede conceptualizarse como un proceso con al menos dos regímenes operativos:
+Desde un enfoque probabilístico, este comportamiento puede interpretarse como un proceso estocástico con cambio de régimen, en el cual el sistema alterna entre diferentes estados operativos. Estos modelos, conocidos como modelos de cambio de régimen, han sido ampliamente utilizados en análisis de series de tiempo para capturar dinámicas con múltiples estados latentes (Hamilton, 1994).
 
-* **Régimen normal**: crecimiento controlado, baja duplicidad, comportamiento cercano a Poisson
-* **Régimen de incidente**: crecimiento acelerado, alta duplicidad, presencia de correlaciones inducidas por reintentos y fallas
+En este contexto, se identifican al menos dos regímenes:
 
-La transición entre estos regímenes no es directamente observable, lo que introduce un componente latente en la dinámica del sistema.
+* **Régimen normal**: baja tasa de duplicidad y crecimiento controlado
+* **Régimen de incidente**: alta tasa de duplicidad y crecimiento acelerado
 
 ---
 
@@ -39,16 +41,16 @@ El problema fundamental no radica únicamente en el crecimiento del almacenamien
 
 * la estimación del volumen real de almacenamiento requerido
 * la detección temprana de anomalías operativas
-* la eficiencia de los mecanismos de deduplicación
+* la eficiencia de mecanismos de deduplicación
 * la capacidad de predecir comportamientos bajo carga o falla
 
-Adicionalmente, dado que los modelos de costo en plataformas cloud dependen directamente del volumen almacenado, este fenómeno impacta de forma directa la eficiencia económica del sistema.
+Dado que los modelos de costo en plataformas cloud dependen directamente del volumen almacenado, este fenómeno impacta de forma directa la eficiencia económica del sistema (Microsoft Azure, 2023; Amazon Web Services, 2023).
 
 ---
 
 ## Enfoque del análisis
 
-Debido a la dificultad de acceder a datos reales completos y controlados en entornos productivos, se propone un enfoque basado en **simulación estructurada**. En este enfoque, se construye un dataset sintético que replica:
+Debido a las limitaciones de acceso a datos reales completos y controlados en entornos productivos, se propone un enfoque basado en **simulación estructurada**. Este enfoque permite construir un dataset sintético que replica:
 
 * la distribución temporal de eventos
 * la generación de artefactos documentales
@@ -62,13 +64,13 @@ Este dataset actúa como un entorno experimental controlado que permite analizar
 
 ## Propósito del estudio
 
-El propósito de este análisis es múltiple:
+El propósito de este análisis es:
 
 * Modelar estadísticamente la generación de archivos en sistemas distribuidos
-* Caracterizar la dinámica de duplicidad bajo diferentes regímenes operativos
-* Evaluar el impacto de la amplificación en el consumo de almacenamiento
+* Cuantificar el impacto de la duplicidad en el consumo de almacenamiento
+* Evaluar escenarios de crecimiento bajo distintos niveles de carga y falla
+* Formular hipótesis contrastables sobre la dinámica del sistema
 * Diseñar y validar modelos estadísticos y de *machine learning* para la detección de errores
-* Analizar la transferibilidad del conocimiento aprendido en simulación hacia escenarios reales
 
 En particular, se busca responder a la siguiente pregunta de investigación:
 
@@ -83,16 +85,16 @@ En particular, se busca responder a la siguiente pregunta de investigación:
 El análisis se fundamenta en:
 
 * Procesos de Poisson para modelar llegadas de eventos (Ross, 2014)
-* Distribuciones binomiales para modelar eventos de duplicidad (Casella & Berger, 2002)
-* Modelos de cambio de régimen para representar estados latentes (Hamilton, 1994)
-* Principios de ingeniería de confiabilidad en sistemas distribuidos (Beyer et al., 2016)
-* Técnicas de deduplicación de contenido en almacenamiento (Meyer & Bolosky, 2011)
+* Distribuciones binomiales para modelar duplicidad (Casella & Berger, 2002)
+* Modelos de cambio de régimen (Hamilton, 1994)
+* Ingeniería de confiabilidad en sistemas distribuidos (Beyer et al., 2016)
+* Técnicas de deduplicación de contenido (Meyer & Bolosky, 2011)
 
 ---
 
 ## Alcance y limitaciones
 
-Es importante reconocer que el entorno simulado no pretende reproducir exactamente un sistema real, sino capturar sus propiedades estructurales más relevantes. En consecuencia:
+El entorno simulado no pretende reproducir exactamente un sistema real, sino capturar sus propiedades estructurales más relevantes. En consecuencia:
 
 * los resultados obtenidos en simulación deben interpretarse como aproximaciones
 * los modelos derivados requieren validación posterior con datos reales
@@ -107,6 +109,6 @@ Este trabajo busca aportar:
 * Un marco formal para modelar la generación de artefactos en sistemas distribuidos
 * Un entorno de simulación reproducible para experimentación controlada
 * Un dataset estructurado para análisis estadístico y entrenamiento de modelos
-* Evidencia empírica sobre la utilidad del entrenamiento simulado en problemas reales
+* Evidencia empírica sobre la utilidad del entrenamiento simulado
 
-En última instancia, el objetivo es proporcionar una base cuantitativa que permita mejorar la toma de decisiones en arquitecturas cloud, particularmente en plataformas como Microsoft Azure y Amazon Web Services, donde el costo y la eficiencia operativa están directamente ligados al comportamiento del almacenamiento.
+En última instancia, el objetivo es proporcionar una base cuantitativa que permita mejorar la toma de decisiones en entornos cloud, donde el costo y la eficiencia operativa están directamente ligados al comportamiento del almacenamiento.
