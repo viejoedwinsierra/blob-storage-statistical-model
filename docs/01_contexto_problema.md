@@ -18,9 +18,9 @@ Sin embargo, esta aproximación se rompe en presencia de fallas operativas. Even
 
 Este fenómeno puede formalizarse mediante un factor de amplificación ( k ), que modifica la tasa de generación de archivos:
 
-[
+$$
 \lambda' = k \cdot \lambda
-]
+$$
 
 donde ( \lambda ) representa la tasa de generación bajo condiciones normales. La ausencia de mecanismos adecuados de idempotencia —como se discute en (Kleppmann, 2017)— puede inducir duplicidad lógica, generando múltiples artefactos con contenido idéntico pero identificadores distintos.
 
