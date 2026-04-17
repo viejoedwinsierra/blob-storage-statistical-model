@@ -16,9 +16,9 @@ Sin embargo, esta aproximación resulta insuficiente cuando el sistema entra en 
 
 Este fenómeno puede formalizarse mediante un factor de amplificación ( k ), tal que la tasa efectiva de generación de archivos se incrementa:
 
-[
+$$
 \lambda' = k \cdot \lambda
-]
+$$
 
 donde ( \lambda ) representa la tasa de generación en condiciones normales. En particular, la ausencia de mecanismos robustos de idempotencia —como se discute en (Kleppmann, 2017)— conduce a la generación de duplicados lógicos: archivos con contenido idéntico (mismo hash o firma digital) pero identificadores distintos, lo que impide su eliminación mediante estrategias triviales de deduplicación.
 
