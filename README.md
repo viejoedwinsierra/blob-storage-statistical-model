@@ -1,19 +1,32 @@
 # 📦 Blob Storage Statistical Model
 
-Marco metodológico reproducible para analizar, simular y optimizar sistemas de almacenamiento tipo **AWS S3 / Azure Blob Storage**.
+Marco metodológico reproducible para analizar, simular y optimizar sistemas de almacenamiento tipo **AWS S3 / Azure Blob Storage**, enfocado en los desafíos actuales del almacenamiento en la nube: crecimiento acelerado de datos, alta redundancia de información, duplicidad de archivos, costos acumulativos por retención y necesidad de automatizar decisiones de ciclo de vida.
 
+El proyecto toma como referencia el enfoque de **AWS S3**, donde la optimización se apoya en clases de almacenamiento y políticas de ciclo de vida para reducir costos durante la vida útil de los datos. AWS plantea que S3 ofrece distintas clases de almacenamiento para optimizar costos según patrones de acceso y uso del dato. :contentReference[oaicite:0]{index=0}
+
+De forma complementaria, se incorpora la referencia de **Azure Blob Storage**, que permite aplicar políticas de lifecycle management para mover blobs a tiers más eficientes en costo según sus patrones de uso o eliminarlos al final de su ciclo de vida. :contentReference[oaicite:1]{index=1}
+
+Desde el punto de vista metodológico, el problema central no es únicamente almacenar archivos, sino identificar cuándo la redundancia, la baja transaccionalidad y la permanencia innecesaria de objetos generan un impacto directo en el costo total del sistema. Por ello, el modelo propone combinar estadística, probabilidad, Big Data y Machine Learning para clasificar archivos, detectar duplicados y recomendar acciones de optimización.
 ---
 
 ## 🧩 Naturaleza del proyecto
 
 Este repositorio presenta un modelo integrado que combina:
 
-- simulación de datos (Airflow)
-- modelamiento estadístico
-- análisis de comportamiento del sistema
-- evaluación de costos en entornos cloud
+- simulación de datos (Apache Airflow)  
+- modelamiento estadístico  
+- análisis del comportamiento del sistema  
+- evaluación de costos en entornos cloud  
 
-El proyecto no solo describe datos, sino que **modela dinámicamente un sistema de almacenamiento distribuido**, permitiendo analizar su evolución bajo diferentes condiciones.
+El proyecto no se limita a describir datos, sino que **modela dinámicamente un sistema de almacenamiento distribuido**, permitiendo analizar su evolución bajo diferentes condiciones operativas y de carga.
+
+Desde una perspectiva académica, el enfoque se fundamenta en principios de **ingeniería de datos y sistemas distribuidos**, donde los data lakes (como AWS S3 y Azure Blob Storage) actúan como repositorios escalables para grandes volúmenes de información (Amazon Web Services, 2023; Microsoft Azure, 2023). En estos entornos, el comportamiento del sistema está directamente influenciado por variables como el volumen de datos, la frecuencia de acceso y la redundancia.
+
+Adicionalmente, el modelo incorpora conceptos de **estadística y probabilidad aplicada**, utilizando simulación para representar procesos estocásticos como la generación de datos, la ocurrencia de errores y la duplicidad de archivos, en línea con enfoques de modelamiento de sistemas complejos (Ross, 2014; Montgomery & Runger, 2018).
+
+Un aspecto central del proyecto es el análisis del impacto económico del almacenamiento en la nube. Según los modelos de pricing de AWS S3 y Azure Blob Storage, el costo no depende únicamente del volumen almacenado, sino también de las operaciones realizadas (PUT, GET), la transferencia de datos y las políticas de retención (AWS, 2023; Microsoft, 2023). En este contexto, la redundancia y la permanencia innecesaria de datos representan un factor crítico de sobrecosto.
+
+Por tanto, el proyecto se orienta a estudiar cómo la **gestión ineficiente del ciclo de vida de los datos, la duplicidad y la baja transaccionalidad** afectan el costo total del sistema, proponiendo un marco analítico que permita evaluar escenarios y apoyar la toma de decisiones en arquitecturas cloud.
 
 ---
 
