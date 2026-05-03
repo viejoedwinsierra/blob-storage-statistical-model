@@ -1,7 +1,7 @@
 ---
 🏠 [Inicio](../README.md)
 
-⬅️ [Anterior](02_procedencia_fuente.md)
+⬅️ [Anterior](02_00_procedencia_fuente.md)
 
 ➡️ [Siguiente](04_parametros_simulacion.md)
 
