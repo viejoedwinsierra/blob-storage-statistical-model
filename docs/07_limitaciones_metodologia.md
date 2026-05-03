@@ -106,67 +106,84 @@ Esto puede reducir impacto real en almacenamiento físico.
 
 ---
 
-## 7.7 Limitaciones en el uso de hash como variable
+## 7.7 Uso del hash como variable probabilística de persistencia
 
-El modelo incorpora variables derivadas del hash del contenido (`hash_head` y `hash_tail`) como aproximación a la identidad estructural del archivo. Sin embargo, esto introduce varias limitaciones:
+El modelo incorpora variables derivadas del hash del contenido (`hash_head` y `hash_tail`) no como identificadores determinísticos absolutos, sino como una aproximación probabilística a la **persistencia y recurrencia del contenido en el sistema**.
 
-- Alta cardinalidad ⚠️: cada hash puede ser único, dificultando su uso directo en modelos estadísticos.
-- Baja interpretabilidad: los valores del hash no tienen significado semántico directo.
-- Dependencia estructural: los hashes derivan del contenido, lo que puede introducir relaciones no lineales difíciles de modelar.
-- Sensibilidad a pequeñas variaciones: cambios mínimos en el contenido generan hashes completamente diferentes.
-- Limitación para análisis estadístico clásico: no son adecuados para técnicas como regresión sin transformación previa.
+En este contexto, el hash permite inferir:
 
-En consecuencia, estas variables requieren:
+- probabilidad de repetición de contenido
+- patrones de duplicación lógica
+- persistencia de estructuras de información a lo largo del tiempo
 
-- transformación (agrupación, hashing reducido, encoding)
-- uso en análisis exploratorio más que en modelamiento directo
-- interpretación como variables auxiliares, no principales
+Sin embargo, este enfoque introduce limitaciones importantes:
 
----
+- Alta cardinalidad ⚠️: los valores de hash tienden a ser únicos, lo que dificulta su uso directo en modelos estadísticos tradicionales.
+- Naturaleza no interpretable: los hashes no contienen significado semántico explícito.
+- Sensibilidad extrema: pequeñas variaciones en el contenido generan valores completamente diferentes.
+- Representación indirecta: el hash no mide directamente persistencia, sino que actúa como proxy probabilístico.
 
-## 7.8 Costo computacional del procesamiento de hash
-
-El uso de hash en sistemas reales implica:
-
-- cálculo intensivo para grandes volúmenes de datos
-- necesidad de lectura completa del archivo
-- impacto en latencia en sistemas distribuidos
-
-Para grandes volúmenes, esto requiere:
-
-- procesamiento incremental
-- uso de pipelines distribuidos (Spark, MapReduce)
-- estrategias de muestreo o hashing parcial
+Por tanto, el hash no debe interpretarse como variable explicativa directa del fenómeno económico (costo), sino como una variable auxiliar para análisis estructural del sistema.
 
 ---
 
-## 7.9 Escalabilidad y costos computacionales
+## 7.8 Exclusión del efecto de compresión y optimización de almacenamiento
 
-Aunque el modelo es conceptualmente escalable a terabytes:
+El modelo no incorpora mecanismos reales de optimización del almacenamiento, tales como:
 
-- el procesamiento masivo requiere arquitectura distribuida
-- el acceso a metadatos puede tener latencia significativa
+- compresión de archivos
+- deduplicación a nivel de infraestructura
+- optimización de bloques o almacenamiento incremental
 
-Implementación real requeriría:
+Esto implica que:
 
-- particionamiento del dataset
-- procesamiento paralelo
-- almacenamiento optimizado de metadatos
+- el costo modelado corresponde a almacenamiento bruto (raw storage)
+- se puede sobreestimar el volumen físico real
+- no se captura la eficiencia interna del sistema de almacenamiento
+
+Esta simplificación es intencional para mantener:
+
+- claridad en la relación entre variables
+- trazabilidad del modelo
+- control del fenómeno simulado
 
 ---
 
-## 7.10 Desbalance entre clases (días normales vs incidentes)
+## 7.9 Uso del hash en machine learning y detección de duplicados
 
-Si \(p_{incident}\) es bajo (ej. 5%):
+El uso principal de las variables de hash dentro del modelo se orienta a:
 
-- La mayoría de observaciones serán días normales.
-- Puede generarse desbalance en modelos predictivos.
+- entrenamiento de modelos de machine learning
+- detección de duplicados antes del almacenamiento
+- identificación de patrones de contenido repetido
 
-Mitigación:
+En este sentido, el hash cumple un rol diferente al del modelamiento estadístico:
 
-- Estratificación.
-- Métricas robustas (AUC, recall en clase minoritaria).
-- Simulación de escenarios adicionales.
+- no se utiliza directamente en regresión del costo
+- se emplea en tareas de clasificación y detección
+- permite construir variables derivadas (frecuencia, recurrencia, similitud)
+
+Este enfoque permite separar:
+
+- análisis económico (costo de almacenamiento)
+- análisis estructural (duplicidad y calidad de datos)
+
+lo cual mejora la modularidad del modelo.
+
+---
+
+## 7.10 Implicaciones metodológicas del uso del hash
+
+El tratamiento del hash dentro del modelo implica:
+
+- considerar su uso como variable de ingeniería de características (feature engineering)
+- evitar su inclusión directa en modelos lineales sin transformación
+- reconocer su valor en modelos no lineales (árboles, clustering, detección de anomalías)
+
+Esto refuerza la idea de que:
+
+- el modelo estadístico y el modelo de machine learning cumplen roles complementarios
+- el hash es más relevante para aprendizaje automático que para inferencia clásica
 
 ---
 
