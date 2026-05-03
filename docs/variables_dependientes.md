@@ -82,15 +82,15 @@ A partir de las variables anteriores se pueden construir:
 
 ### Costo
 
-- \( C_{total} = \sum storage\_cost \)
+- $$\( C_{total} = \sum storage\_cost \)$$
 
 ---
 
 ### Estado del sistema
 
-- \( N_t \): número de archivos
-- \( D_t \): duplicados
-- \( U_t \): almacenamiento total
+- $$\( N_t \)$$: número de archivos
+- $$\( D_t \$$: duplicados
+-$$ \( U_t \)$$: almacenamiento total
 
 ---
 
