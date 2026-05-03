@@ -3,7 +3,7 @@
 
 ⬅️ [Anterior](01_contexto_problema.md)
 
-➡️ [Siguiente](03_estructura_dataset.md)
+➡️ [Siguiente](02_01_marco_teorico_blobstorage.md)
 
 ---
 
