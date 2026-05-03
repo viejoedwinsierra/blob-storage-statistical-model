@@ -181,8 +181,8 @@ Incluye referencias y fundamentos utilizados.
 
 Haz clic en cada sección: 
 1. [01 - Contexto del problema](docs/01_contexto_problema.md) 
-2. [02 - Procedencia y fuente](docs/02_procedencia_fuente.md) 
-3. [03 - Estructura del dataset](docs/03_estructura_dataset.md) 
+2. [02 - Procedencia y fuente](docs/02_00_procedencia_fuente.md) 
+3. [03 - Estructura del dataset](docs/03_00_estructura_dataset.md) 
 4. [04 - Parámetros de simulación](docs/04_parametros_simulacion.md) 
 5. [05 - Modelamiento estadístico](docs/05_modelamiento_estadistico.md) 
 6. [06 - Preguntas analíticas](docs/06_preguntas_analiticas.md) 
