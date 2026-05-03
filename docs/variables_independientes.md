@@ -2,31 +2,31 @@
 
 ## 1. Definición
 
-Las variables independientes corresponden a los factores que explican el comportamiento del sistema de almacenamiento desde la perspectiva del dataset construido.
+Las variables independientes corresponden a los factores observables a nivel de archivo que explican el comportamiento del sistema de almacenamiento.
 
-Estas variables representan características observables del archivo, su ciclo de vida y condiciones operativas que influyen directamente en:
+Estas variables representan características del archivo, su ciclo de vida y condiciones operativas que influyen en:
 
-- el costo de almacenamiento
+- el volumen de almacenamiento
 - el uso del sistema
 - la calidad de los datos
 - la dinámica del ciclo de vida
 
-A diferencia de un enfoque puramente teórico, estas variables están definidas a nivel de **instancia (archivo)** y son medibles dentro del dataset.
+⚠️ Las variables independientes NO incluyen el costo, sino los factores que lo generan.
 
 ---
 
 ## 2. Principio de Modelado
 
-El objetivo del modelo es capturar relaciones funcionales entre variables observables que afectan:
+El objetivo del modelo es capturar relaciones funcionales entre variables observables que permiten explicar:
 
-- el costo del almacenamiento
+- el costo del almacenamiento (variable dependiente)
 - la persistencia del dato
 - la eficiencia del sistema
 - la aparición de anomalías
 
 Por lo tanto:
 
-> Las variables independientes no buscan replicar toda la complejidad del sistema distribuido, sino representar de forma controlada los factores que influyen en el comportamiento del almacenamiento.
+> Las variables independientes representan las causas del comportamiento del sistema, mientras que el costo y otras métricas son efectos derivados.
 
 ---
 
@@ -34,10 +34,10 @@ Por lo tanto:
 
 ### 3.1 Características del archivo
 
-- `size_gb`: tamaño del archivo (variable clave del costo)
+- `size_gb`: tamaño del archivo (principal determinante del volumen)
 - `file_type`: tipo de archivo (json, jpg, pdf, mp4)
 
-Estas variables determinan el volumen y la variabilidad del sistema.
+Estas variables determinan la estructura y variabilidad del almacenamiento.
 
 ---
 
@@ -57,9 +57,9 @@ Estas variables modelan el comportamiento dinámico del dato en el tiempo.
 
 - `storage_tier`: nivel de almacenamiento (hot, cool, archive)
 
-Esta variable determina directamente:
+Esta variable determina:
 
-- la tarifa de almacenamiento
+- la tarifa de almacenamiento (de forma indirecta)
 - la eficiencia del uso de recursos
 
 ---
@@ -73,6 +73,8 @@ Estas variables permiten analizar:
 
 - eficiencia del sistema
 - comportamiento de ingestión de datos
+
+⚠️ `transfer_speed_mbps` es una variable derivada, lo que puede introducir dependencia con otras variables.
 
 ---
 
@@ -109,11 +111,7 @@ Estas variables representan segmentos parciales del contenido del archivo y se u
 
 ⚠️ No se utiliza el hash completo debido a su alto costo computacional.
 
-Estas variables:
-
-- presentan alta cardinalidad ⚠️
-- no son interpretables directamente
-- requieren transformación para uso en modelos
+⚠️ Estas variables presentan alta cardinalidad y no son interpretables directamente.
 
 Su principal uso es en:
 
@@ -122,15 +120,14 @@ Su principal uso es en:
 
 ---
 
-## 4. Uso en la Simulación
+## 4. Uso en el Modelo
 
 Las variables independientes son utilizadas para:
 
-- generar el dataset sintético a nivel de archivo
-- modelar el costo de almacenamiento
-- simular comportamiento del ciclo de vida
-- introducir condiciones de error
+- explicar el costo de almacenamiento (Y)
+- modelar el comportamiento del ciclo de vida
 - analizar patrones de uso del sistema
+- identificar condiciones de error
 
 ---
 
@@ -138,7 +135,7 @@ Las variables independientes son utilizadas para:
 
 El modelo no busca reproducir exactamente la distribución real del sistema, sino construir un entorno controlado que permita:
 
-- evaluar relaciones entre variables
+- evaluar relaciones causales entre variables
 - identificar patrones estructurales
 - analizar impacto en costo
 
@@ -146,13 +143,13 @@ Esto implica:
 
 - uso de distribuciones controladas
 - simplificación de relaciones complejas
-- separación entre modelo estadístico y modelo de machine learning
+- separación entre variables causales (X) y resultados (Y)
 
 ---
 
 ## 6. Principio Fundamental
 
-> La validez del modelo depende de capturar correctamente las relaciones entre tamaño, tiempo, almacenamiento y costo, no de replicar exactamente los datos reales.
+> Las variables independientes representan los factores que generan el comportamiento del sistema, mientras que el costo y las métricas agregadas son consecuencias de dichas variables.
 
 ---
 
@@ -164,17 +161,16 @@ Las variables independientes definen:
 - Velocity → transferencia y acceso
 - Variety → file_type
 - Veracity → variables de error
-- Value → optimización del storage_tier y ciclo de vida
+- Value → emerge del modelo (no es una variable independiente)
 
 ---
 
 ## 8. Conclusión
 
-Las variables independientes permiten construir un modelo coherente y controlado que:
+Las variables independientes permiten construir un modelo coherente donde:
 
-- conecta características del archivo con costo
-- integra ciclo de vida del dato
-- incorpora calidad del sistema mediante errores
-- habilita análisis estadístico y machine learning
+- el costo es una consecuencia del sistema
+- el comportamiento emerge de las características del archivo
+- las anomalías se integran como condiciones explicativas
 
-Esto permite estudiar el comportamiento del almacenamiento desde una perspectiva estructural y cuantificable.
+Esto garantiza consistencia entre dataset, modelo estadístico y análisis.
