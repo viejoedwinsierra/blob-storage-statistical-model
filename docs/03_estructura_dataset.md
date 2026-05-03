@@ -1,4 +1,4 @@
---
+---
 🏠 [Inicio](../README.md)
 
 ⬅️ [Anterior](02_procedencia_fuente.md)
@@ -11,15 +11,15 @@
 
 ## 3.1 Objetivo
 
-Construir un dataset estructurado que represente el inventario de blobs generados por el sistema durante un horizonte de 180 días, incorporando tanto operación normal como eventos de falla que generan duplicación y anomalías en el almacenamiento.
+Construir un dataset estructurado que represente el inventario de archivos almacenados en un sistema de object storage durante un horizonte de 180 días, incorporando tanto operación normal como eventos de falla.
 
-El dataset modela instancias documentales observables y sirve como base para:
+El dataset se orienta al análisis del **costo de almacenamiento y ciclo de vida del dato**, sirviendo como base para:
 
-* Modelado estadístico del crecimiento
-* Estimación del impacto en almacenamiento
-* Identificación de anomalías
+* Modelado estadístico del costo
+* Análisis exploratorio de datos (EDA)
 * Entrenamiento de modelos de machine learning
-* Simulación de escenarios operativos
+* Evaluación del ciclo de vida del almacenamiento
+* Identificación de anomalías
 
 ---
 
@@ -28,18 +28,18 @@ El dataset modela instancias documentales observables y sirve como base para:
 Se define el dataset como:
 
 $$
-\mathcal{D} = {u_i}_{i=1}^{M_d}
+\mathcal{D} = \{u_i\}_{i=1}^{M_d}
 $$
 
-donde cada instancia $u_i$ corresponde a un **blob observable en el sistema de almacenamiento**.
+donde cada instancia $u_i$ corresponde a un **archivo almacenado (blob)**.
 
-Cada registro representa un archivo físico y contiene:
+Cada registro representa:
 
-* identidad documental
-* contenido parcial
-* ubicación
-* atributos temporales
-* estado operativo (error/no error)
+* un archivo físico
+* atributos de tamaño y tipo
+* variables temporales
+* condiciones operativas
+* variables de error asociadas
 
 ---
 
@@ -51,211 +51,222 @@ El dataset puede construirse bajo dos esquemas:
 
 Derivado de Blob Storage mediante:
 
-* enumeración completa de blobs
+* enumeración de blobs
 * extracción de metadatos físicos
 
 ### 3.3.2 Dataset simulado
 
 Generado mediante un modelo probabilístico controlado que replica:
 
-* llegada de eventos
 * generación de archivos
-* inyección de fallas
-* duplicación de contenido
+* distribución de tamaños
+* asignación de almacenamiento
+* inyección de errores
 
 ---
 
-## 3.4 Estructura del dataset (tabla principal)
 
-### Tabla: `blob_inventory`
+## 3.4.1 Definición de variables del dataset
 
-| Campo                | Tipo      | Descripción                                                                          |
-| -------------------- | --------- | ------------------------------------------------------------------------------------ |
-| blob_id              | UUID      | Identificador único del registro                                                     |
-| document_id          | string    | ID lógico del contenido                                                              |
-| hash_head            | string    | Primeros N caracteres derivados del hash (tamaño configurable)                       |
-| hash_tail            | string    | Últimos N caracteres derivados del hash (tamaño configurable)                        |
-| blob_name            | string    | Nombre físico del archivo                                                            |
-| container            | string    | Contenedor lógico                                                                    |
-| path                 | string    | Ruta completa del blob                                                               |
-| size_bytes           | integer   | Tamaño del archivo                                                                   |
-| simulated_created_at | timestamp | Fecha simulada de creación                                                           |
-| real_created_at      | timestamp | Fecha real del sistema                                                               |
-| hour                 | integer   | Hora de generación (0–23)                                                            |
-| is_error             | boolean   | Indicador de error                                                                   |
-| error_type           | array     | Lista de tipos de error asociados al archivo (puede contener múltiples valores)      |
-| error_group          | array     | Lista de categorías de error asociadas al archivo (puede contener múltiples valores) |
+A partir de la estructura definida, se establecen las siguientes variables, clasificadas según su tipo de dato, tipo estadístico y rol dentro del modelo.
+
+### Tabla: Definición de variables
+
+| Variable | Tipo de dato | Tipo de variable | Clasificación | Rol | Descripción |
+|----------|-------------|------------------|--------------|-----|-------------|
+| file_id | Texto | Identificador | - | Técnica | Identificador único del archivo |
+| file_type | Categórica | Nominal | X | Explicativa | Tipo de archivo (json, jpg, pdf, mp4) |
+| size_gb | Numérica | Cuantitativa continua | X | Clave | Tamaño del archivo en GB |
+| storage_tier | Categórica | Nominal | X | Clave | Nivel de almacenamiento (hot, cool, archive) |
+| days_stored | Numérica | Cuantitativa discreta | X | Clave | Tiempo de almacenamiento en días |
+| days_since_last_access | Numérica | Cuantitativa discreta | X | Explicativa | Días desde último acceso |
+| read_level | Categórica | Ordinal | X | Explicativa | Nivel de lectura (low, medium, high) |
+| modify_level | Categórica | Ordinal | X | Explicativa | Nivel de modificación |
+| movement_storage | Numérica (0/1) | Binaria (dicotómica) | X | Explicativa | Indica cambio de tier |
+| transfer_duration_sec | Numérica | Cuantitativa continua | X | Explicativa | Duración de transferencia |
+| transfer_speed_mbps | Numérica | Cuantitativa continua | X | Explicativa | Velocidad de transferencia |
+| hash_head | Texto | Cualitativa nominal | X | Explicativa ⚠️ | Segmento inicial del hash |
+| hash_tail | Texto | Cualitativa nominal | X | Explicativa ⚠️ | Segmento final del hash |
+| error_duplicado | Numérica (0/1) | Binaria (dicotómica) | X | Secundaria | Duplicidad lógica |
+| error_orphan | Numérica (0/1) | Binaria (dicotómica) | X | Secundaria | Inconsistencia de archivos |
+| error_null | Numérica (0/1) | Binaria (dicotómica) | X | Secundaria | Registro sin contenido |
+| error_blob_timeout | Numérica (0/1) | Binaria (dicotómica) | X | Secundaria | Error operativo |
+| storage_cost | Numérica | Cuantitativa continua | Y | Dependiente | Costo de almacenamiento |
 
 ---
 
-## 3.5 Enriquecimiento del contenido
+### Clasificación general del modelo
 
-Para capturar información parcial del contenido sin almacenar el documento completo, se definen:
+#### Variable dependiente (Y)
+
+- storage_cost
+
+#### Variables independientes (X)
+
+**Cuantitativas:**
+- size_gb
+- days_stored
+- days_since_last_access
+- transfer_duration_sec
+- transfer_speed_mbps
+
+**Categóricas:**
+- file_type
+- storage_tier
+- read_level
+- modify_level
+
+**Binarias:**
+- movement_storage
+- error_duplicado
+- error_orphan
+- error_null
+- error_blob_timeout
+
+---
+
+### Observaciones metodológicas
+
+- Se eliminan variables redundantes (ej: tamaño en MB vs GB).
+- Se identifica relación estructural entre variables:
 
 $$
-content_head = \text{primeros 200 caracteres}
+storage\_cost = size_{gb} \cdot tarifa_{tier} \cdot \frac{days_{stored}}{30}
 $$
 
+- La variable `transfer_speed_mbps` es derivada de tamaño y tiempo, lo que puede introducir dependencia.
+
+- Las variables `hash_head` y `hash_tail` presentan alta cardinalidad ⚠️, por lo que requieren transformación antes de su uso en modelos estadísticos.
+
+- Las variables de error son consideradas explicativas secundarias, orientadas a capturar anomalías del sistema.
+
+---
+
+
+## 3.5 Tipología de archivos
+
+Se limita el sistema a cuatro tipos principales:
+
+| Tipo | Uso |
+|------|----|
+| JSON | Metadatos |
+| JPG | Imágenes |
+| PDF | Documentos |
+| MP4 | Multimedia |
+
+Esta restricción permite controlar la variabilidad y facilitar el análisis estadístico.
+
+---
+
+## 3.6 Modelo de costo de almacenamiento
+
+El costo se define como:
+
 $$
-content_tail = \text{últimos 200 caracteres}
+storage\_cost = size_{gb} \cdot tarifa_{tier} \cdot \frac{days\_stored}{30}
+$$
+
+donde:
+
+* $size_{gb}$: tamaño del archivo  
+* $tarifa_{tier}$: costo por nivel de almacenamiento  
+* $days_{stored}$: tiempo almacenado  
+
+---
+
+## 3.7 Variables de error
+
+Los errores se modelan como variables binarias:
+
+$$
+error \in \{0,1\}
 $$
 
 Esto permite:
 
+* evitar duplicidad de registros
+* representar múltiples condiciones de error
+* mejorar interpretabilidad del modelo
+
+---
+
+## 3.8 Variables derivadas de contenido
+
+Se incorporan variables basadas en el hash del contenido:
+
+* `hash_head`
+* `hash_tail`
+
+Estas permiten:
+
+* detección de duplicados
 * análisis de similitud
-* detección de duplicados parciales
 * trazabilidad del contenido
-* reducción de volumen de datos
+
+⚠️ Estas variables presentan alta cardinalidad y requieren transformación para su uso en modelos.
 
 ---
 
-## 3.6 Detección de duplicación
+## 3.9 Relación estructural del modelo
 
-Dos blobs se consideran duplicados si:
-
-$$
-hash_i = hash_j \quad \text{y} \quad name_i \neq name_j
-$$
-
-El número de duplicados diarios se define como:
+El modelo de costo sigue la relación:
 
 $$
-D_t = \sum_{h} (f(h) - 1), \quad \text{para } f(h) > 1
+storage\_cost \approx f(size_{gb}, days_{stored}, storage_{tier})
 $$
 
-donde $f(h)$ es la frecuencia de aparición del hash.
-
-La tasa de duplicación es:
+Adicionalmente:
 
 $$
-duplicate_rate_t = \frac{D_t}{X_t}
+transfer\_speed \approx \frac{size}{tiempo}
 $$
+
+Esto introduce posibles dependencias estructurales entre variables.
 
 ---
 
-## 3.7 Tabla agregada diaria
+## 3.10 Consideraciones metodológicas
 
-### Tabla: `events_daily`
-
-| Campo          | Descripción                         |
-| -------------- | ----------------------------------- |
-| day            | Fecha                               |
-| $X_t$          | Número total de blobs               |
-| $D_t$          | Número de duplicados                |
-| duplicate_rate | $D_t / X_t$                         |
-| incident_flag  | Indicador de incidente              |
-| TPS_t          | Transacciones por segundo estimadas |
+* Eliminación de variables redundantes (ej: MB vs GB)
+* Separación entre variables estructurales y de error
+* Inclusión de variables de ciclo de vida del dato
+* Uso de variables categóricas, cuantitativas y binarias
 
 ---
 
-## 3.8 Modelo de generación (simulación)
-
-### Llegada de eventos
-
-$$
-X_t \sim \text{Poisson}(\lambda)
-$$
-
-### Cambio de régimen
-
-$$
-X_t =
-\begin{cases}
-\text{Poisson}(\lambda) & \text{día normal} \
-\text{Poisson}(k \cdot \lambda) & \text{incidente}
-\end{cases}
-$$
-
-### Duplicación
-
-$$
-D_t \sim \text{Binomial}(X_t, p_{fail})
-$$
-
----
-
-## 3.9 Tipos de error modelados
-
-| error_group | error_type             | Descripción                      |
-| ----------- | ---------------------- | -------------------------------- |
-| DUPLICATE   | SAME_CONTENT_DIFF_NAME | Mismo hash, distinto nombre      |
-| DUPLICATE   | SAME_CONTENT_DIFF_PATH | Mismo contenido en ruta distinta |
-| INTEGRITY   | NAME_COLLISION         | Mismo nombre, distinto contenido |
-| MISSING     | PDF_WITHOUT_JSON       | Documento incompleto             |
-| MISSING     | JSON_WITHOUT_PDF       | Metadata sin archivo             |
-
----
-
-## 3.10 Validaciones estructurales
-
-El dataset debe cumplir:
-
-$$
-\sum_{t} X_t = M_d
-$$
-
-$$
-duplicate_rate_t \approx 0 \quad \text{en días normales}
-$$
-
-$$
-duplicate_rate_t \approx \frac{k-1}{k} \quad \text{en incidentes}
-$$
-
-Además:
-
-* consistencia entre hash y contenido
-* coherencia entre timestamp y distribución temporal
-* existencia física del archivo
-
----
-
-## 3.11 Relación con el modelo estadístico
-
-El volumen esperado se modela como:
-
-$$
-E[V] = \lambda \cdot S \cdot [(1 - p_{fail}) + p_{fail} \cdot k]
-$$
-
-donde:
-
-* $S$: tamaño promedio del archivo
-* $\lambda$: tasa de eventos
-* $k$: factor de amplificación
-
----
-
-## 3.12 Uso en machine learning
+## 3.11 Uso en machine learning
 
 El dataset permite modelar:
 
 $$
-P(Y = 1 \mid X)
+Y = storage\_cost
 $$
 
 donde:
 
-* $Y$: indicador de error
-* $X$: variables observables
+* $Y$: costo de almacenamiento  
+* $X$: variables del archivo, tiempo, tipo y errores  
 
-Incluyendo:
+Aplicaciones:
 
-* hora
-* tamaño
-* ruta
-* duplicidad
-* patrones de contenido
+* modelos de regresión
+* análisis de importancia de variables
+* detección de anomalías
+* optimización de almacenamiento
 
 ---
 
-## 3.13 Consideraciones finales
+## 3.12 Consideraciones finales
 
-Este dataset constituye una representación estructurada del sistema de almacenamiento, permitiendo:
+El dataset representa una aproximación controlada del sistema de almacenamiento, permitiendo:
 
 * análisis reproducible
 * validación de hipótesis
 * entrenamiento de modelos
-* comparación entre simulación y entorno real
+* integración entre estadística, probabilidad y machine learning
 
-La calidad del modelo predictivo dependerá directamente de la coherencia y consistencia de este dataset.
+La calidad del análisis dependerá de:
+
+* correcta selección de variables  
+* control de dependencias  
+* tratamiento de variables de alta cardinalidad ⚠️  
