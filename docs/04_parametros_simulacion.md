@@ -1,7 +1,7 @@
 ---
 🏠 [Inicio](../README.md)
 
-⬅️ [Anterior](03_estructura_dataset.md)
+⬅️ [Anterior](03_00_estructura_dataset.md)
 
 ➡️ [Siguiente](05_modelamiento_estadistico.md)
 
