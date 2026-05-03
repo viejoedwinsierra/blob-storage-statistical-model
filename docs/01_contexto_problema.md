@@ -1,6 +1,6 @@
 🏠 [Inicio](../README.md)
 
-➡️ [Siguiente](02_procedencia_fuente.md)
+➡️ [Siguiente](02_00_procedencia_fuente.md)
 
 ---
 
