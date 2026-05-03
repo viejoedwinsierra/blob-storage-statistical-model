@@ -1,5 +1,3 @@
----
-
 🏠 [Inicio](../README.md)
 
 ➡️ [Siguiente](02_procedencia_fuente.md)
@@ -8,107 +6,169 @@
 
 # 1. Contexto del problema y propósito del análisis
 
-En arquitecturas distribuidas basadas en microservicios, los sistemas de almacenamiento de objetos (*Object Storage*) constituyen la capa persistente donde se materializan los artefactos generados por procesos transaccionales y de integración. Estos sistemas operan bajo un modelo de crecimiento continuo impulsado por múltiples servicios desacoplados, lo que introduce dinámicas complejas de generación, replicación y almacenamiento de datos (Kleppmann, 2017).
+En sistemas de almacenamiento tipo *Object Storage*, cada archivo almacenado representa una unidad observable del comportamiento del sistema. A diferencia de enfoques tradicionales centrados en eventos agregados, este trabajo propone un análisis a nivel de **instancia (archivo)**, donde cada observación captura características del dato, su ciclo de vida y condiciones operativas.
 
-Bajo condiciones normales de operación, el volumen de almacenamiento crece de manera aproximadamente proporcional al número de transacciones ejecutadas. Este comportamiento es consistente con modelos de procesamiento distribuido como *MapReduce* (Dean & Ghemawat, 2008), donde cada operación puede generar artefactos intermedios y finales que se almacenan de forma persistente.
+En este contexto, el crecimiento del almacenamiento no depende únicamente del número de eventos, sino de la interacción entre:
 
-Desde una perspectiva probabilística, la llegada de estos eventos puede modelarse mediante un proceso de Poisson, el cual describe la ocurrencia de eventos independientes en el tiempo (Ross, 2014). En este caso, cada transacción puede interpretarse como un evento que genera un artefacto documental, con un tamaño promedio cercano a 1 MB.
+- el tamaño de los archivos  
+- el tiempo de almacenamiento  
+- el tipo de almacenamiento asignado  
+- la presencia de errores o duplicidad  
+- el comportamiento del ciclo de vida del dato  
 
-Sin embargo, esta aproximación se rompe en presencia de fallas operativas. Eventos como *timeouts*, reintentos automáticos, errores de idempotencia o inconsistencias en pipelines introducen comportamientos no lineales en la generación de artefactos. En estos escenarios, una misma transacción lógica puede generar múltiples archivos físicos, alterando la relación esperada entre eventos y almacenamiento (Beyer et al., 2016).
+---
 
-Este fenómeno puede formalizarse mediante un factor de amplificación ( k ), que modifica la tasa de generación de archivos:
+## Enfoque probabilístico del problema
+
+Desde una perspectiva probabilística, el sistema puede entenderse como un conjunto de variables aleatorias a nivel de archivo:
 
 $$
-\lambda' = k \cdot \lambda
+size_{gb} \sim F_s
 $$
 
-donde ( \lambda ) representa la tasa de generación bajo condiciones normales. La ausencia de mecanismos adecuados de idempotencia —como se discute en (Kleppmann, 2017)— puede inducir duplicidad lógica, generando múltiples artefactos con contenido idéntico pero identificadores distintos.
+$$
+days_{stored} \sim F_t
+$$
 
-Este tipo de duplicidad ha sido ampliamente estudiado en sistemas de almacenamiento mediante técnicas de deduplicación basadas en contenido (Meyer & Bolosky, 2011), donde se demuestra que el crecimiento redundante puede impactar significativamente la eficiencia del almacenamiento.
+$$
+storage_{tier} \sim \text{Categorical}
+$$
 
-Desde un enfoque probabilístico, este comportamiento puede interpretarse como un proceso estocástico con cambio de régimen, en el cual el sistema alterna entre diferentes estados operativos. Estos modelos, conocidos como modelos de cambio de régimen, han sido ampliamente utilizados en análisis de series de tiempo para capturar dinámicas con múltiples estados latentes (Hamilton, 1994).
+$$
+error \sim \text{Bernoulli}(p)
+$$
 
-En este contexto, se identifican al menos dos regímenes:
+Estas variables interactúan para generar resultados observables, como:
 
-* **Régimen normal**: baja tasa de duplicidad y crecimiento controlado
-* **Régimen de incidente**: alta tasa de duplicidad y crecimiento acelerado
+- costo de almacenamiento por archivo  
+- probabilidad de error  
+- probabilidad de duplicidad  
+- persistencia del contenido  
+
+El problema se puede formalizar como:
+
+$$
+Y = f(X)
+$$
+
+donde:
+
+$$
+X = \{ size_{gb}, days_{stored}, storage_{tier}, file_{type}, error \}
+$$
+
+y
+
+$$
+Y = \{ storage_{cost}, is_{duplicate}, has_{error} \}
+$$
+
+De forma más general:
+
+$$
+P(Y \mid X)
+$$
+
+representa la distribución condicional que el modelo busca estimar.
 
 ---
 
 ## Problema central
 
-El problema fundamental no radica únicamente en el crecimiento del almacenamiento, sino en la **incertidumbre estructural sobre la relación entre eventos lógicos y artefactos físicos generados**. Esta incertidumbre afecta:
+El problema fundamental consiste en **explicar y modelar el comportamiento del sistema de almacenamiento a partir de variables observables a nivel de archivo**, bajo condiciones de incertidumbre.
 
-* la estimación del volumen real de almacenamiento requerido
-* la detección temprana de anomalías operativas
-* la eficiencia de mecanismos de deduplicación
-* la capacidad de predecir comportamientos bajo carga o falla
+Esto implica responder preguntas como:
 
-Dado que los modelos de costo en plataformas cloud dependen directamente del volumen almacenado, este fenómeno impacta de forma directa la eficiencia económica del sistema (Microsoft Azure, 2023; Amazon Web Services, 2023).
+- ¿Qué variables explican el costo de almacenamiento?  
+- ¿Cómo afectan los errores la calidad del sistema?  
+- ¿Qué factores influyen en la persistencia del contenido?  
+- ¿Qué patrones permiten detectar duplicados antes del almacenamiento?  
 
 ---
 
-## Enfoque del análisis
+## Enfoque basado en dataset
 
-Debido a las limitaciones de acceso a datos reales completos y controlados en entornos productivos, se propone un enfoque basado en **simulación estructurada**. Este enfoque permite construir un dataset sintético que replica:
+Dado que no se dispone de datos reales completamente controlados, se construye un **dataset sintético estructurado**, donde cada fila representa un archivo con variables como:
 
-* la distribución temporal de eventos
-* la generación de artefactos documentales
-* la inyección controlada de errores operativos
-* la aparición de duplicados lógicos
-* la variabilidad en rutas y almacenamiento
+- tamaño (`size_gb`)  
+- tipo de archivo (`file_type`)  
+- nivel de almacenamiento (`storage_tier`)  
+- tiempo (`days_stored`)  
+- errores (`error_*`)  
+- segmentos de contenido (`hash_head`, `hash_tail`)  
 
-Este dataset actúa como un entorno experimental controlado que permite analizar el comportamiento del sistema bajo diferentes configuraciones.
+Este dataset permite:
+
+- aplicar análisis exploratorio de datos (EDA)  
+- estudiar distribuciones de variables  
+- evaluar relaciones entre variables  
+- construir modelos estadísticos y de machine learning  
 
 ---
 
 ## Propósito del estudio
 
-El propósito de este análisis es:
+El objetivo del análisis es:
 
-* Modelar estadísticamente la generación de archivos en sistemas distribuidos
-* Cuantificar el impacto de la duplicidad en el consumo de almacenamiento
-* Evaluar escenarios de crecimiento bajo distintos niveles de carga y falla
-* Formular hipótesis contrastables sobre la dinámica del sistema
-* Diseñar y validar modelos estadísticos y de *machine learning* para la detección de errores
+- Identificar variables relevantes para el modelamiento  
+- Analizar el comportamiento estadístico de las variables  
+- Evaluar relaciones entre variables independientes y dependientes  
+- Construir modelos que permitan explicar el comportamiento del sistema  
 
-En particular, se busca responder a la siguiente pregunta de investigación:
+En particular, se busca responder:
 
-[
-\text{¿En qué medida un modelo entrenado sobre datos simulados puede capturar patrones operativos transferibles a sistemas reales?}
-]
-
----
-
-## Marco teórico
-
-El análisis se fundamenta en:
-
-* Procesos de Poisson para modelar llegadas de eventos (Ross, 2014)
-* Distribuciones binomiales para modelar duplicidad (Casella & Berger, 2002)
-* Modelos de cambio de régimen (Hamilton, 1994)
-* Ingeniería de confiabilidad en sistemas distribuidos (Beyer et al., 2016)
-* Técnicas de deduplicación de contenido (Meyer & Bolosky, 2011)
+$$
+\text{¿Qué variables explican el comportamiento del sistema de almacenamiento a nivel de archivo bajo incertidumbre?}
+$$
 
 ---
 
-## Alcance y limitaciones
+## Relación con modelos estadísticos
 
-El entorno simulado no pretende reproducir exactamente un sistema real, sino capturar sus propiedades estructurales más relevantes. En consecuencia:
+El problema se enmarca en el estudio de:
 
-* los resultados obtenidos en simulación deben interpretarse como aproximaciones
-* los modelos derivados requieren validación posterior con datos reales
-* la utilidad del enfoque depende del grado de alineación entre simulación y sistema objetivo
+- distribuciones de probabilidad  
+- variables categóricas  
+- variables binarias  
+- relaciones entre variables  
+
+Esto permite aplicar:
+
+- análisis univariado  
+- análisis bivariado  
+- selección de variables  
+- modelamiento estadístico  
 
 ---
 
-## Contribución esperada
+## Alcance del modelo
 
-Este trabajo busca aportar:
+El modelo se enfoca en:
 
-* Un marco formal para modelar la generación de artefactos en sistemas distribuidos
-* Un entorno de simulación reproducible para experimentación controlada
-* Un dataset estructurado para análisis estadístico y entrenamiento de modelos
-* Evidencia empírica sobre la utilidad del entrenamiento simulado
+- comportamiento estructural del sistema  
+- relaciones entre variables observables  
+- análisis probabilístico controlado  
 
-En última instancia, el objetivo es proporcionar una base cuantitativa que permita mejorar la toma de decisiones en entornos cloud, donde el costo y la eficiencia operativa están directamente ligados al comportamiento del almacenamiento.
+No busca:
+
+- replicar exactamente sistemas reales  
+- modelar optimizaciones internas (compresión, deduplicación física)  
+
+---
+
+## Contribución del trabajo
+
+Este trabajo aporta:
+
+- un dataset estructurado para análisis estadístico  
+- un enfoque probabilístico a nivel de archivo  
+- una base para modelamiento en machine learning  
+- un entorno controlado para evaluación de hipótesis  
+
+---
+
+## Conclusión
+
+El análisis modela el sistema de almacenamiento como un conjunto de variables aleatorias observables, donde el comportamiento global emerge de la interacción entre características del archivo, ciclo de vida y condiciones operativas.
+
+Este enfoque permite conectar teoría estadística con aplicación práctica, facilitando el aprendizaje y uso de modelos estadísticos en un entorno controlado.
