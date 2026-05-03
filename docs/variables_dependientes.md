@@ -66,9 +66,9 @@ A partir de las variables anteriores se pueden construir:
 
 ### Volumen
 
-- \( V_{total} = \sum size_{gb} \)
-- \( V_{useful} \)
-- \( V_{redundant} \)
+- $$\( V_{total} = \sum size_{gb} \)$$
+- $$\( V_{useful} \)$$
+- $$\( V_{redundant} \)$$
 
 ---
 
@@ -89,8 +89,8 @@ A partir de las variables anteriores se pueden construir:
 ### Estado del sistema
 
 - $$\( N_t \)$$: número de archivos
-- $$\( D_t \$$: duplicados
--$$ \( U_t \)$$: almacenamiento total
+- $$\( D_t \)$$: duplicados
+- $$\( U_t \)$$: almacenamiento total
 
 ---
 
