@@ -2,143 +2,155 @@
 
 ## 1. Definición
 
-Las variables dependientes representan los resultados observables del sistema, es decir, aquellas magnitudes que emergen a partir de la interacción de:
+Las variables dependientes representan los resultados observables a nivel de archivo dentro del sistema de almacenamiento.
 
-- la demanda
-- los errores
-- el almacenamiento
-- el ciclo de vida de los datos
+A diferencia de un enfoque agregado por tiempo, este modelo define variables dependientes a nivel de **instancia (archivo)**, permitiendo:
 
-Estas variables son fundamentales para medir:
-
-- eficiencia
-- calidad
-- costo
-- comportamiento del sistema
+- análisis estadístico directo
+- modelamiento con machine learning
+- construcción posterior de métricas agregadas
 
 ---
 
 ## 2. Principio de Modelado
 
-A diferencia de las variables independientes, las variables dependientes:
+El modelo se construye a nivel micro (archivo), donde:
 
-- evolucionan en el tiempo
-- reflejan el estado real del sistema
-- permiten validar hipótesis
+- cada observación representa una unidad de almacenamiento
+- las variables dependientes capturan el resultado del comportamiento del sistema sobre cada archivo
+
+Por lo tanto:
+
+> Las variables agregadas del sistema (volumen total, tasas, costos globales) se derivan a partir de las variables a nivel archivo.
 
 ---
 
 ## 3. Variables Dependientes Definidas
 
-### 3.1 Volumen
+### 3.1 Costo de almacenamiento
 
-- V_total(t): volumen total almacenado
-- V_useful(t): volumen útil
-- V_redundant(t): volumen redundante
+- `storage_cost`: costo individual del archivo
 
----
+Representa:
 
-### 3.2 Calidad (Veracity)
-
-- error_rate: tasa de error observada
-- dup_rate: tasa de duplicados
-- inconsistency_rate: inconsistencias (ej. JSON sin PDF)
-- Veracity_index: índice compuesto de calidad
+- impacto económico por archivo
+- efecto combinado de tamaño, tiempo y tipo de almacenamiento
 
 ---
 
-### 3.3 Velocidad
+### 3.2 Estado de calidad del archivo
 
-- λ_obs(t): tasa real de ingestión
-- retry_rate: tasa de reintentos
-- throughput: volumen procesado por tiempo
-- latencia observada
+- `is_duplicate`: indicador de duplicidad (derivado de hash o error)
+- `has_error`: indicador general de error
+- `is_orphan`: inconsistencia (ej. JSON sin PDF)
 
----
+Estas variables permiten modelar:
 
-### 3.4 Valor
-
-- C_total: costo total del sistema
-- C_storage: costo de almacenamiento
-- C_error: costo inducido por errores
-- Value_index: proporción de datos utilizables
+- veracidad del dato
+- calidad del sistema
 
 ---
 
-### 3.5 Estado del sistema
+### 3.3 Estado operativo
 
-- N_t: número total de objetos
-- D_t: duplicados acumulados
-- J_t: costo acumulado
-- U_t: almacenamiento utilizado
+- `is_moved`: indica si el archivo fue movido entre tiers
+- `is_active`: indica si el archivo está en uso (derivable de acceso)
+
+Estas variables representan el comportamiento del archivo dentro del ciclo de vida.
 
 ---
 
-## 4. Uso en la Simulación
+## 4. Variables Derivadas (Nivel Sistema)
+
+A partir de las variables anteriores se pueden construir:
+
+### Volumen
+
+- \( V_{total} = \sum size_{gb} \)
+- \( V_{useful} \)
+- \( V_{redundant} \)
+
+---
+
+### Calidad
+
+- error_rate
+- dup_rate
+- inconsistency_rate
+
+---
+
+### Costo
+
+- \( C_{total} = \sum storage\_cost \)
+
+---
+
+### Estado del sistema
+
+- \( N_t \): número de archivos
+- \( D_t \): duplicados
+- \( U_t \): almacenamiento total
+
+---
+
+## 5. Uso en el modelo
 
 Las variables dependientes permiten:
 
-- evaluar la eficiencia del sistema
-- medir el impacto de errores
-- calcular el costo total
-- analizar el comportamiento dinámico
-
----
-
-## 5. Rol dentro del modelo
-
-Las variables dependientes no buscan describir el dato en sí, sino el sistema:
-
-> El modelo no busca similitudes físicas o lógicas entre archivos, sino medir cómo el sistema gestiona dichos archivos.
-
-Esto implica que:
-
-- no se modela el contenido semántico del archivo
-- se modela su comportamiento dentro del sistema
+- entrenar modelos de regresión (costo)
+- entrenar modelos de clasificación (errores, duplicados)
+- construir métricas agregadas del sistema
+- analizar eficiencia del almacenamiento
 
 ---
 
 ## 6. Relación con el almacenamiento
 
-El almacenamiento no es estático.
+El almacenamiento se modela a nivel de archivo:
 
-El movimiento de los datos (ingestión, duplicación, retención, eliminación) define:
+- cada archivo contribuye al volumen total
+- cada archivo genera costo
+- cada archivo puede contener errores
 
-- el crecimiento del volumen
-- la aparición de redundancia
-- la eficiencia del sistema
+El comportamiento global emerge de la agregación.
 
 ---
 
 ## 7. Relación con el ciclo de vida
 
-El ciclo de vida de los datos garantiza que:
+El ciclo de vida del dato se observa en cada archivo:
 
-- los datos se generan
-- se almacenan
-- se procesan
-- se consumen
-- se eliminan
+- creación
+- almacenamiento
+- acceso
+- modificación
+- posible movimiento
 
-Las variables dependientes capturan el efecto de este ciclo.
+Las variables dependientes capturan el resultado de este proceso.
 
 ---
 
 ## 8. Relación con las 5Vs
 
-Las variables dependientes son la manifestación directa de las 5Vs:
+A nivel archivo:
 
-- Volume → V_total, V_useful
-- Velocity → λ_obs, throughput
-- Variety → distribución de tipos
-- Veracity → error_rate, dup_rate
-- Value → costo, eficiencia
+- Volume → size_gb
+- Velocity → transferencia
+- Variety → file_type
+- Veracity → errores
+- Value → storage_cost
+
+A nivel agregado:
+
+- Volume → suma de tamaños
+- Value → costo total
 
 ---
 
 ## 9. Principio clave
 
-> El valor del modelo no está en los datos, sino en la capacidad de medir el comportamiento del sistema frente a los datos.
+> El sistema no se modela directamente: se modelan sus componentes (archivos), y el comportamiento global emerge de su agregación.
 
 ---
 
@@ -146,9 +158,8 @@ Las variables dependientes son la manifestación directa de las 5Vs:
 
 Las variables dependientes permiten:
 
-- cuantificar el impacto de las decisiones
-- evaluar la eficiencia del almacenamiento
-- medir la calidad del sistema
-- validar hipótesis sobre costo y rendimiento
+- modelar el sistema desde una perspectiva micro
+- construir métricas agregadas coherentes
+- integrar análisis estadístico y machine learning
 
-Son el núcleo del análisis del sistema.
+Esto garantiza consistencia entre dataset, modelo y análisis.
