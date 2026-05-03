@@ -1,4 +1,20 @@
+---
+🏠 [Inicio](../README.md)
+
+⬅️ [Anterior](03_estructura_dataset.md)
+
+➡️ [Siguiente](03_02_variables_dependientes.md)
+
+---
+
 # Variables Independientes del Sistema
+
+## 🔗 Navegación del modelo
+
+⬅️ [Volver al Dataset](03_estructura_dataset.md)  
+➡️ [Ir a Variables Dependientes (Y)](03_02_variables_dependientes.md)
+
+---
 
 ## 1. Definición
 
@@ -37,8 +53,6 @@ Por lo tanto:
 - `size_gb`: tamaño del archivo (principal determinante del volumen)
 - `file_type`: tipo de archivo (json, jpg, pdf, mp4)
 
-Estas variables determinan la estructura y variabilidad del almacenamiento.
-
 ---
 
 ### 3.2 Ciclo de vida del dato
@@ -49,18 +63,11 @@ Estas variables determinan la estructura y variabilidad del almacenamiento.
 - `modify_level`: nivel de modificación
 - `movement_storage`: indicador de cambio de tier
 
-Estas variables modelan el comportamiento dinámico del dato en el tiempo.
-
 ---
 
 ### 3.3 Infraestructura de almacenamiento
 
 - `storage_tier`: nivel de almacenamiento (hot, cool, archive)
-
-Esta variable determina:
-
-- la tarifa de almacenamiento (de forma indirecta)
-- la eficiencia del uso de recursos
 
 ---
 
@@ -69,12 +76,11 @@ Esta variable determina:
 - `transfer_duration_sec`: duración de transferencia
 - `transfer_speed_mbps`: velocidad de transferencia
 
-Estas variables permiten analizar:
+⚠️ Variable derivada:
 
-- eficiencia del sistema
-- comportamiento de ingestión de datos
-
-⚠️ `transfer_speed_mbps` es una variable derivada, lo que puede introducir dependencia con otras variables.
+$$
+transfer_{speed} = \frac{size}{tiempo}
+$$
 
 ---
 
@@ -85,16 +91,11 @@ Estas variables permiten analizar:
 - `error_null`
 - `error_blob_timeout`
 
-Estas variables representan condiciones anómalas del sistema y afectan:
+Modelo:
 
-- la veracidad del dato
-- la consistencia del almacenamiento
-
-Se modelan como variables binarias:
-
-\[
+$$
 error \in \{0,1\}
-\]
+$$
 
 ---
 
@@ -103,31 +104,46 @@ error \in \{0,1\}
 - `hash_head`
 - `hash_tail`
 
-Estas variables representan segmentos parciales del contenido del archivo y se utilizan como:
+Representación:
+
+$$
+hash_{head} = H(content)_{[0:k]}
+$$
+
+$$
+hash_{tail} = H(content)_{[-k:]}
+$$
+
+Estas variables funcionan como:
 
 - proxy probabilístico de persistencia
 - indicador de recurrencia del contenido
-- mecanismo aproximado de detección de duplicados
+- aproximación a detección de duplicados
 
-⚠️ No se utiliza el hash completo debido a su alto costo computacional.
-
-⚠️ Estas variables presentan alta cardinalidad y no son interpretables directamente.
-
-Su principal uso es en:
-
-- machine learning
-- detección de duplicados antes del almacenamiento
+⚠️ Alta cardinalidad  
+⚠️ No interpretables directamente  
 
 ---
 
 ## 4. Uso en el Modelo
 
-Las variables independientes son utilizadas para:
+Las variables independientes son utilizadas para explicar:
 
-- explicar el costo de almacenamiento (Y)
-- modelar el comportamiento del ciclo de vida
-- analizar patrones de uso del sistema
-- identificar condiciones de error
+$$
+Y = storage_{cost}
+$$
+
+y en general:
+
+$$
+Y = f(X)
+$$
+
+donde:
+
+$$
+X = \{size_{gb}, file_{type}, storage_{tier}, days_{stored}, error, hash\}
+$$
 
 ---
 
@@ -139,38 +155,35 @@ El modelo no busca reproducir exactamente la distribución real del sistema, sin
 - identificar patrones estructurales
 - analizar impacto en costo
 
-Esto implica:
-
-- uso de distribuciones controladas
-- simplificación de relaciones complejas
-- separación entre variables causales (X) y resultados (Y)
-
 ---
 
 ## 6. Principio Fundamental
 
-> Las variables independientes representan los factores que generan el comportamiento del sistema, mientras que el costo y las métricas agregadas son consecuencias de dichas variables.
+> Las variables independientes representan los factores que generan el comportamiento del sistema, mientras que el costo y las métricas son consecuencias.
 
 ---
 
 ## 7. Relación con las 5Vs
 
-Las variables independientes definen:
-
-- Volume → size_gb
-- Velocity → transferencia y acceso
-- Variety → file_type
-- Veracity → variables de error
-- Value → emerge del modelo (no es una variable independiente)
+- Volume → size_gb  
+- Velocity → transferencia  
+- Variety → file_type  
+- Veracity → errores  
+- Value → emerge del modelo  
 
 ---
 
 ## 8. Conclusión
 
-Las variables independientes permiten construir un modelo coherente donde:
+Las variables independientes permiten construir un modelo donde:
 
-- el costo es una consecuencia del sistema
-- el comportamiento emerge de las características del archivo
-- las anomalías se integran como condiciones explicativas
+- el comportamiento del sistema se explica desde el archivo
+- el costo es una consecuencia
+- las anomalías son variables explicativas
 
-Esto garantiza consistencia entre dataset, modelo estadístico y análisis.
+---
+
+## 🔁 Navegación de retorno
+
+⬅️ [Volver al Dataset](03_estructura_dataset.md)  
+➡️ [Ir a Variables Dependientes (Y)](03_02_variables_dependientes.md)
