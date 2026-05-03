@@ -11,256 +11,174 @@
 
 ## 4.1 Propósito de la simulación
 
-La simulación permite generar un dataset sintético a nivel de archivo para estudiar el comportamiento de un sistema de almacenamiento de objetos.
+La simulación genera un dataset sintético a nivel de archivo que replica el comportamiento de un sistema de almacenamiento bajo condiciones controladas.
 
-El modelo se centra en:
+El modelo integra:
 
-1. Variabilidad del tipo de archivo: `json`, `jpg`, `pdf`, `mp4`.
-2. Tamaño del archivo.
-3. Ciclo de vida del dato.
-4. Nivel de almacenamiento.
-5. Errores binarios.
-6. Persistencia aproximada del contenido mediante `hash_head` y `hash_tail`.
+- características del archivo
+- distribución temporal de carga
+- errores estructurados por tipo
+- persistencia probabilística del contenido
+- ciclo de vida del dato
 
-El resultado principal de la simulación es la tabla:
+El resultado es la tabla:
 
-- `blob_inventory` — nivel archivo/blob.
-
----
-
-## 4.2 Horizonte y tamaño del experimento
-
-### 4.2.1 Horizonte temporal
-
-- **T = 180 días**
-
-Este horizonte permite observar variabilidad temporal, permanencia del dato y comportamiento del almacenamiento durante un período equivalente a seis meses.
-
-### 4.2.2 Tamaño muestral
-
-- **N = 10,000 archivos**
-
-Cada fila del dataset representa un archivo simulado.
-
-Formalmente:
-
-$$
-\mathcal{D} = \{u_i\}_{i=1}^{N}
-$$
-
-donde cada instancia \(u_i\) corresponde a un archivo almacenado.
+- `blob_inventory` (nivel archivo)
 
 ---
 
-## 4.3 Parámetros de tipos de archivo
+## 4.2 Configuración general del simulador
 
-El tipo de archivo se modela como una variable categórica:
-
-$$
-file_{type} \sim \text{Categorical}(p_{json}, p_{jpg}, p_{pdf}, p_{mp4})
-$$
-
-Valores permitidos:
-
-| Tipo | Uso esperado |
-|---|---|
-| json | Metadatos |
-| jpg | Imagen |
-| pdf | Documento |
-| mp4 | Multimedia |
-
-Esta decisión controla la variedad del dataset y permite comparar comportamientos diferenciados por tipo de archivo.
-
----
-
-## 4.4 Parámetros de tamaño
-
-El tamaño del archivo se expresa únicamente en GB para evitar redundancia entre unidades.
+El volumen diario de archivos está acotado por:
 
 $$
-size_{gb} \sim F_s
+N_t \leq N_{max}
 $$
 
-Se recomienda usar distribuciones diferenciadas por tipo de archivo:
-
-| Tipo | Rango sugerido |
-|---|---:|
-| json | 0.000001 GB – 0.0005 GB |
-| jpg | 0.0001 GB – 0.008 GB |
-| pdf | 0.00005 GB – 0.02 GB |
-| mp4 | 0.005 GB – 0.5 GB |
-
-El uso de una distribución log-normal permite representar colas largas:
+donde:
 
 $$
-size_{gb} \sim \text{LogNormal}(\mu_{type}, \sigma_{type})
+N_{max} = 10{,}000
+$$
+
+y:
+
+$$
+N_t = \text{número de archivos generados en el día } t
+$$
+
+El porcentaje global de error se define como:
+
+$$
+P(error) = 0.24
 $$
 
 ---
 
-## 4.5 Parámetros de ciclo de vida
+## 4.3 Distribución temporal de la carga
 
-El tiempo de almacenamiento se modela como:
-
-$$
-days_{stored} \sim F_t
-$$
-
-Para mantener control del experimento, se puede usar:
+La generación diaria se distribuye en franjas horarias:
 
 $$
-days_{stored} \sim \text{Uniform}(1, 180)
+N_t = \sum_{h=1}^{H} N_{t,h}
 $$
 
-El tiempo desde el último acceso se modela condicionado al tiempo almacenado:
+donde:
 
 $$
-days_{since\_last\_access} \sim \text{Uniform}(0, days_{stored})
+N_{t,h} \sim \text{Categorical}(p_h)
 $$
 
-Esto permite clasificar archivos activos, fríos o candidatos a movimiento de nivel.
-
----
-
-## 4.6 Parámetros de nivel de almacenamiento
-
-El nivel de almacenamiento se modela como variable categórica:
+y:
 
 $$
-storage_{tier} \sim \text{Categorical}(p_{hot}, p_{cool}, p_{archive})
+p_h = \{0.10, 0.20, 0.50, 0.20\}
 $$
 
-Valores permitidos:
+Esto representa las proporciones de carga por franja del día.
 
-| Tier | Interpretación |
-|---|---|
-| hot | Alta lectura |
-| cool | Acceso medio |
-| archive | Baja lectura |
-
----
-
-## 4.7 Parámetros operativos de transferencia
-
-La duración de transferencia se modela como:
+La tasa de error por franja se modela como:
 
 $$
-transfer_{duration\_sec} \sim F_d
-$$
-
-La velocidad de transferencia se calcula como variable derivada:
-
-$$
-transfer_{speed\_mbps} =
-\frac{size_{gb} \cdot 1024 \cdot 8}{transfer_{duration\_sec}}
-$$
-
-⚠️ Esta variable depende del tamaño y del tiempo de transferencia, por lo que debe evaluarse con cuidado para evitar redundancia o multicolinealidad.
-
----
-
-## 4.8 Parámetros de lectura, modificación y movimiento
-
-Los niveles de lectura y modificación se modelan como variables ordinales:
-
-$$
-read_{level} \sim \text{Categorical}(low, medium, high)
-$$
-
-$$
-modify_{level} \sim \text{Categorical}(low, medium, high)
-$$
-
-El movimiento entre niveles de almacenamiento se representa como variable binaria:
-
-$$
-movement_{storage} \sim \text{Bernoulli}(p_{move})
+P(error \mid h) = 0.25
 $$
 
 ---
 
-## 4.9 Parámetros de error
+## 4.4 Distribución jerárquica de errores
 
-Los errores se modelan como variables binarias independientes:
+El error global se descompone como:
+
+$$
+P(error) = \sum_{f=1}^{F} P(f_f) \cdot P(s \mid f_f)
+$$
+
+donde:
+
+- \(f_f\): familia de error  
+- \(s\): subtipo  
+
+Ejemplo:
+
+$$
+P(\text{duplicidad}) = 0.40
+$$
+
+---
+
+## 4.5 Generación de errores a nivel archivo
+
+Cada archivo tiene una probabilidad de error:
 
 $$
 error_i \sim \text{Bernoulli}(p_i)
 $$
 
-Variables consideradas:
-
-| Variable | Significado |
-|---|---|
-| error_duplicado | Duplicidad lógica |
-| error_orphan | Archivo o metadata huérfana |
-| error_null | Registro sin contenido |
-| error_blob_timeout | Error operativo de transferencia |
-
-El indicador general de error puede definirse como:
-
-$$
-has_{error} =
-\mathbb{1}(error_{duplicado} + error_{orphan} + error_{null} + error_{blob\_timeout} > 0)
-$$
-
----
-
-## 4.10 Parámetros de hash parcial
-
-No se calcula ni analiza el hash completo del archivo por costo computacional.
-
-Se utilizan segmentos parciales:
-
-$$
-hash_{head} = H(content)[0:k]
-$$
-
-$$
-hash_{tail} = H(content)[-k:]
-$$
-
-Estas variables funcionan como:
-
-- proxy probabilístico de persistencia
-- indicador de recurrencia del contenido
-- apoyo para detección temprana de duplicados
-
-⚠️ No constituyen evidencia absoluta de duplicidad.
-
----
-
-## 4.11 Parámetros de costo
-
-Aunque el costo no es una variable independiente, puede calcularse como variable resultado del sistema.
-
-$$
-storage_{cost} =
-size_{gb} \cdot rate_{tier} \cdot \frac{days_{stored}}{30}
-$$
-
 donde:
 
-- \(size_{gb}\): tamaño del archivo
-- \(rate_{tier}\): tarifa del nivel de almacenamiento
-- \(days_{stored}\): tiempo almacenado
+$$
+p_i = P(error) \cdot P(f_f) \cdot P(s \mid f_f)
+$$
 
 ---
 
-## 4.12 Relación probabilística del modelo
+## 4.6 Distribución de tamaño
 
-El conjunto de variables independientes se define como:
+El tamaño del archivo se modela como:
 
 $$
-X = \{size_{gb}, file_{type}, storage_{tier}, days_{stored}, read_{level}, modify_{level}, error_i, hash_{head}, hash_{tail}\}
+size_{gb} \sim \text{LogNormal}(\mu, \sigma)
 $$
 
-Las variables resultado pueden expresarse como:
+condicionado por el tipo:
+
+$$
+size_{gb} \mid file_{type}
+$$
+
+---
+
+## 4.7 Distribución del tipo de archivo
+
+El tipo de archivo se define como:
+
+$$
+file_{type} \sim \text{Categorical}(json, jpg, pdf, mp4)
+$$
+
+---
+
+## 4.8 Persistencia del contenido
+
+El contenido se representa mediante segmentos de hash:
+
+$$
+hash_{head} = H(content)_{[0:k]}
+$$
+
+$$
+hash_{tail} = H(content)_{[-k:]}
+$$
+
+Estas variables actúan como aproximación probabilística de persistencia.
+
+---
+
+## 4.9 Modelo de variables
+
+El conjunto de variables independientes es:
+
+$$
+X = \{size_{gb}, file_{type}, storage_{tier}, days_{stored}, error_i, hash_{head}, hash_{tail}\}
+$$
+
+Las variables dependientes se definen como:
 
 $$
 Y = \{storage_{cost}, has_{error}, is_{duplicate}\}
 $$
 
-El objetivo general del análisis es estudiar:
+El objetivo del modelo es estimar:
 
 $$
 P(Y \mid X)
@@ -268,47 +186,49 @@ $$
 
 ---
 
-## 4.13 Resumen de parámetros
+## 4.10 Función de costo
 
-| Parámetro | Valor sugerido | Tipo | Significado |
-|---|---:|---|---|
-| T | 180 | entero | Horizonte temporal |
-| N | 10,000 | entero | Número de archivos |
-| file_type | json, jpg, pdf, mp4 | categórico | Tipo de archivo |
-| size_gb | según tipo | continua | Tamaño del archivo |
-| storage_tier | hot, cool, archive | categórico | Nivel de almacenamiento |
-| days_stored | 1–180 | discreta | Tiempo almacenado |
-| days_since_last_access | 0–days_stored | discreta | Último acceso |
-| read_level | low, medium, high | ordinal | Nivel de lectura |
-| modify_level | low, medium, high | ordinal | Nivel de modificación |
-| movement_storage | 0/1 | binaria | Cambio de tier |
-| error_* | 0/1 | binaria | Condiciones de error |
-| hash_head | texto | nominal ⚠️ | Segmento inicial |
-| hash_tail | texto | nominal ⚠️ | Segmento final |
-| storage_cost | calculado | continua | Resultado del sistema |
+El costo se calcula como:
+
+$$
+storage_{cost} = size_{gb} \cdot rate_{tier} \cdot \frac{days_{stored}}{30}
+$$
 
 ---
 
-## 4.14 Escenarios de simulación recomendados
+## 4.11 Resumen del modelo probabilístico
 
-Para análisis comparativo se sugieren:
+El sistema se puede resumir como:
 
-1. **Baseline**: baja tasa de errores y distribución balanceada de tipos.
-2. **Alta presencia multimedia**: mayor proporción de archivos mp4.
-3. **Alta duplicidad lógica**: aumento de `error_duplicado`.
-4. **Almacenamiento frío**: mayor proporción en `archive`.
-5. **Alta actividad**: mayor lectura y modificación.
+$$
+X \rightarrow Y
+$$
 
-Estos escenarios permiten estudiar sensibilidad sobre volumen, costo, calidad y ciclo de vida.
+y de forma probabilística:
+
+$$
+P(Y \mid X)
+$$
+
+---
+
+## 4.12 Notas de consistencia
+
+- Todas las ecuaciones se presentan en formato bloque.
+- Se evita el uso de notación inline.
+- Se separa claramente definición matemática de interpretación.
+- El modelo es probabilístico, no determinista.
+- El uso de hash es parcial para eficiencia ⚠️.
 
 ---
 
-## 4.15 Notas de consistencia
+## 4.13 Conclusión
 
-- No usar simultáneamente `size_mb` y `size_gb`.
-- No incluir `storage_cost` como variable independiente si se usa como resultado.
-- Tratar `hash_head` y `hash_tail` como variables auxiliares de alta cardinalidad ⚠️.
-- Diferenciar claramente entre variables observables, variables derivadas y variables objetivo.
-- Mantener ecuaciones en formato de bloque con `$$`.
+La simulación integra:
 
----
+- generación de datos
+- distribución temporal
+- errores jerárquicos
+- variables observables
+
+Esto permite construir un dataset coherente para análisis estadístico y modelamiento probabilístico.
