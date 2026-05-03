@@ -1,3 +1,13 @@
+---
+🏠 [Inicio](../README.md)
+
+⬅️ [Dataset](03_estructura_dataset.md)
+
+⬅️ [Variables Independientes](03_01_variables_independientes.md)
+
+➡️ [Parámetros de Simulación](04_parametros_simulacion.md)
+---
+
 # Variables Dependientes del Sistema
 
 ## 1. Definición
@@ -40,9 +50,9 @@ Representa:
 
 ### 3.2 Estado de calidad del archivo
 
-- `is_duplicate`: indicador de duplicidad (derivado de hash o error)
+- `is_duplicate`: indicador de duplicidad derivado de hash o error
 - `has_error`: indicador general de error
-- `is_orphan`: inconsistencia (ej. JSON sin PDF)
+- `is_orphan`: inconsistencia, por ejemplo JSON sin PDF
 
 Estas variables permiten modelar:
 
@@ -54,43 +64,61 @@ Estas variables permiten modelar:
 ### 3.3 Estado operativo
 
 - `is_moved`: indica si el archivo fue movido entre tiers
-- `is_active`: indica si el archivo está en uso (derivable de acceso)
+- `is_active`: indica si el archivo está en uso, derivable de acceso
 
 Estas variables representan el comportamiento del archivo dentro del ciclo de vida.
 
 ---
 
-## 4. Variables Derivadas (Nivel Sistema)
+## 4. Variables derivadas a nivel sistema
 
-A partir de las variables anteriores se pueden construir:
+A partir de las variables anteriores se pueden construir métricas agregadas.
 
-### Volumen
+### 4.1 Volumen
 
-- $$\( V_{total} = \sum size_{gb} \)$$
-- $$\( V_{useful} \)$$
-- $$\( V_{redundant} \)$$
+$$
+V_{total} = \sum size_{gb}
+$$
 
----
+$$
+V_{useful}
+$$
 
-### Calidad
-
-- error_rate
-- dup_rate
-- inconsistency_rate
-
----
-
-### Costo
-
-- $$\( C_{total} = \sum storage\_cost \)$$
+$$
+V_{redundant}
+$$
 
 ---
 
-### Estado del sistema
+### 4.2 Calidad
 
-- $$\( N_t \)$$: número de archivos
-- $$\( D_t \)$$: duplicados
-- $$\( U_t \)$$: almacenamiento total
+- `error_rate`
+- `dup_rate`
+- `inconsistency_rate`
+
+---
+
+### 4.3 Costo
+
+$$
+C_{total} = \sum storage_{cost}
+$$
+
+---
+
+### 4.4 Estado del sistema
+
+$$
+N_t = \text{número de archivos}
+$$
+
+$$
+D_t = \text{duplicados}
+$$
+
+$$
+U_t = \text{almacenamiento total}
+$$
 
 ---
 
@@ -98,8 +126,8 @@ A partir de las variables anteriores se pueden construir:
 
 Las variables dependientes permiten:
 
-- entrenar modelos de regresión (costo)
-- entrenar modelos de clasificación (errores, duplicados)
+- entrenar modelos de regresión para costo
+- entrenar modelos de clasificación para errores y duplicados
 - construir métricas agregadas del sistema
 - analizar eficiencia del almacenamiento
 
@@ -135,11 +163,11 @@ Las variables dependientes capturan el resultado de este proceso.
 
 A nivel archivo:
 
-- Volume → size_gb
+- Volume → `size_gb`
 - Velocity → transferencia
-- Variety → file_type
+- Variety → `file_type`
 - Veracity → errores
-- Value → storage_cost
+- Value → `storage_cost`
 
 A nivel agregado:
 
@@ -163,3 +191,13 @@ Las variables dependientes permiten:
 - integrar análisis estadístico y machine learning
 
 Esto garantiza consistencia entre dataset, modelo y análisis.
+
+---
+
+🏠 [Inicio](../README.md)
+
+⬅️ [Dataset](03_estructura_dataset.md)
+
+⬅️ [Variables Independientes](03_01_variables_independientes.md)
+
+➡️ [Parámetros de Simulación](04_parametros_simulacion.md)
