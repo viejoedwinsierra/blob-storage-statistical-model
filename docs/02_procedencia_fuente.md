@@ -1,5 +1,4 @@
 ---
-
 🏠 [Inicio](../README.md)
 
 ⬅️ [Anterior](01_contexto_problema.md)
@@ -12,234 +11,232 @@
 
 Se emplea un enfoque de **simulación controlada** debido a restricciones de acceso a datos reales completos en entornos productivos. Este enfoque permite construir un entorno experimental reproducible donde las condiciones del sistema pueden ser parametrizadas y evaluadas de forma sistemática.
 
-La base de datos se genera mediante un **modelo generativo estructurado**, diseñado para replicar el comportamiento de un sistema distribuido de almacenamiento de objetos bajo diferentes condiciones operativas, incluyendo estados normales y escenarios de falla.
+La base de datos se genera mediante un **modelo generativo estructurado**, diseñado para replicar el comportamiento de un sistema de almacenamiento de objetos a nivel de archivo, incorporando:
+
+- características del dato (tamaño, tipo)
+- ciclo de vida (tiempo, acceso)
+- condiciones operativas (transferencia)
+- variables de error
+- estructuras de contenido (hash parcial)
 
 ---
 
-## 2.1 Generación del universo de contenidos únicos
+## 2.1 Generación del universo de contenidos
 
-Se define un conjunto inicial de contenidos únicos:
+Se define un conjunto inicial de archivos:
 
 $$
 N = 10{,}000
 $$
 
-Cada contenido representa una entidad documental base (*ground truth*) y se caracteriza por los siguientes atributos:
+Cada archivo representa una unidad observable del sistema y se caracteriza por:
 
-* `content_id`: identificador único del contenido
-* `content_hash`: hash determinístico que representa el contenido lógico
-* `size_bytes`: tamaño del archivo
-* `creation_timestamp`: instante lógico de creación
+* `file_id`: identificador único  
+* `file_type`: tipo de archivo (json, jpg, pdf, mp4)  
+* `size_gb`: tamaño del archivo  
+* `creation_timestamp`: instante de creación  
 
-El tamaño de los archivos se modela mediante una distribución probabilística:
+El tamaño se modela como:
 
 $$
-size_bytes \sim \text{LogNormal}(\mu, \sigma)
+size_{gb} \sim \text{LogNormal}(\mu, \sigma)
 $$
 
-Esta elección permite capturar la asimetría observada en tamaños de documentos reales, donde predominan archivos pequeños pero existen colas largas de mayor tamaño.
+Esta distribución captura:
 
-Este conjunto constituye la base del sistema, sobre la cual se generan instancias documentales, duplicados y variaciones operativas.
+- alta concentración de archivos pequeños  
+- presencia de archivos grandes (cola larga)  
 
 ---
 
-## 2.2 Generación de estructura jerárquica de almacenamiento
+## 2.2 Generación de tipos de archivo
 
-Para simular entornos empresariales reales, los objetos se distribuyen en una estructura jerárquica de almacenamiento.
-
-Se define:
-
-* $M$ contenedores, donde $M \in [5, 10]$
-
-Cada objeto es asignado a una ruta de la forma:
+El tipo de archivo se modela como variable categórica:
 
 $$
-/empresa/{area}/{anio}/{mes}/{dia}/
+file_{type} \sim \text{Categorical}(p_{json}, p_{jpg}, p_{pdf}, p_{mp4})
 $$
 
-Esta estructura permite modelar:
+Esto permite capturar:
 
-* segmentación organizacional
-* distribución temporal del almacenamiento
-* concentración de carga por contenedor
-* comportamiento no uniforme del sistema (efecto Pareto)
-
-Formalmente, la asignación de rutas puede modelarse como una variable categórica:
-
-$$
-path_i \sim \mathcal{P}(\text{area}, \text{time})
-$$
-
-donde la probabilidad de asignación puede ser uniforme o sesgada para inducir concentración.
+- variabilidad estructural del sistema  
+- diferentes patrones de tamaño  
+- impacto diferencial en almacenamiento  
 
 ---
 
-## 2.3 Generación de volumen diario de eventos
+## 2.3 Generación de ciclo de vida del dato
 
-En condiciones normales, el número de eventos diarios se modela como un proceso de Poisson:
+Se modela el tiempo de almacenamiento como:
 
 $$
-X_t \sim \text{Poisson}(\lambda)
+days_{stored} \sim F_t
+$$
+
+donde $F_t$ puede ser uniforme o exponencial.
+
+Adicionalmente:
+
+$$
+days_{since\_last\_access} \sim \text{Uniform}(0, days_{stored})
+$$
+
+Esto permite representar:
+
+- archivos activos  
+- archivos fríos  
+- comportamiento de acceso  
+
+---
+
+## 2.4 Asignación de nivel de almacenamiento
+
+El nivel de almacenamiento se modela como:
+
+$$
+storage_{tier} \sim \text{Categorical}(\text{hot}, \text{cool}, \text{archive})
+$$
+
+Esta variable determina:
+
+- costo unitario  
+- comportamiento del sistema  
+- eficiencia del almacenamiento  
+
+---
+
+## 2.5 Generación de variables operativas
+
+Se modela la transferencia como:
+
+$$
+transfer_{duration} \sim F_d
+$$
+
+y la velocidad como variable derivada:
+
+$$
+transfer_{speed} = \frac{size_{gb}}{transfer_{duration}}
+$$
+
+Esto introduce:
+
+- dependencia estructural entre variables  
+- análisis de eficiencia  
+
+---
+
+## 2.6 Generación de errores
+
+Los errores se modelan como variables binarias independientes:
+
+$$
+error_i \sim \text{Bernoulli}(p_i)
 $$
 
 donde:
 
-* $X_t$: número de blobs generados en el día $t$
-* $\lambda = 1000$: tasa promedio diaria
+- $error_{duplicado}$  
+- $error_{orphan}$  
+- $error_{null}$  
+- $error_{blob}$  
 
-Este modelo captura la llegada de eventos independientes en el tiempo, consistente con sistemas transaccionales distribuidos.
+Esto permite capturar:
 
----
-
-## 2.4 Generación de duplicados
-
-Se modelan distintos mecanismos de duplicación que representan fallas reales en sistemas distribuidos.
-
-### Tipo A – Duplicado por contenido
-
-* $content_hash$ se mantiene constante
-* $blob_name$ cambia
-
-$$
-hash_i = hash_j \quad \text{y} \quad name_i \neq name_j
-$$
-
-Representa reintentos automáticos sin idempotencia.
+- condiciones de falla  
+- calidad del sistema  
+- veracidad del dato  
 
 ---
 
-### Tipo B – Colisión de nombre
+## 2.7 Representación parcial del contenido (hash)
 
-* $blob_name$ es igual
-* $content_hash$ es distinto
+Para evitar el costo computacional del procesamiento completo del contenido, se utilizan segmentos parciales:
 
 $$
-name_i = name_j \quad \text{y} \quad hash_i \neq hash_j
+hash\_head = H(content)[0:k]
 $$
 
-Representa errores de versionado o sobrescritura.
+$$
+hash\_tail = H(content)[-k:]
+$$
+
+Estas variables funcionan como:
+
+- proxy probabilístico de persistencia  
+- indicador de recurrencia del contenido  
+- aproximación a la detección de duplicados  
+
+⚠️ Este enfoque reduce costo computacional pero introduce incertidumbre en la detección exacta.
 
 ---
 
-### Tipo C – Duplicado en rutas distintas
+## 2.8 Construcción del dataset maestro
 
-* $blob_name$ igual
-* $content_hash$ igual
-* $path$ distinto
+Se define el dataset como:
 
 $$
-hash_i = hash_j,\quad name_i = name_j,\quad path_i \neq path_j
-$$
-
-Representa replicación entre áreas o inconsistencias de sincronización.
-
----
-
-## 2.5 Generación de eventos de falla y cambio de régimen
-
-Se introduce un mecanismo de cambio de régimen para modelar condiciones de incidente.
-
-Se define una variable indicadora:
-
-$$
-incident_t \sim \text{Bernoulli}(p_{incident})
-$$
-
-donde:
-
-$$
-p_{incident} = 0.05
-$$
-
-En días normales:
-
-$$
-X_t \sim \text{Poisson}(\lambda)
-$$
-
-En días de incidente:
-
-$$
-X_t \sim \text{Poisson}(k \cdot \lambda)
-$$
-
-con:
-
-$$
-k = 3
-$$
-
-Adicionalmente, se modela la probabilidad de falla:
-
-$$
-D_t \sim \text{Binomial}(X_t, p_{fail})
-$$
-
-donde:
-
-$$
-p_{fail} = 0.10
-$$
-
-Este mecanismo permite capturar simultáneamente:
-
-* incremento en volumen
-* incremento en duplicidad
-* correlación inducida por fallas
-
----
-
-## 2.6 Construcción del dataset maestro
-
-A partir de los procesos anteriores, se construye un **dataset maestro estructurado**, donde cada fila representa una instancia documental.
-
-Formalmente:
-
-$$
-\mathcal{D} = {u_i}_{i=1}^{M_d}
+\mathcal{D} = \{u_i\}_{i=1}^{N}
 $$
 
 donde cada instancia $u_i$ contiene:
 
-* atributos temporales
-* atributos de contenido
-* atributos de ruta
-* indicadores de error
-* metadatos de control
+- variables de tamaño  
+- variables de tipo  
+- variables temporales  
+- variables operativas  
+- variables de error  
+- variables de contenido (hash parcial)  
 
-Este dataset constituye la fuente de verdad del sistema simulado y es utilizado posteriormente para:
+Este dataset se utiliza para:
 
-* generación de archivos físicos
-* construcción de inventarios
-* entrenamiento de modelos estadísticos y de machine learning
-
----
-
-## 2.7 Alcance analítico de la simulación
-
-El entorno generado permite evaluar múltiples escenarios:
-
-* crecimiento acumulativo del almacenamiento
-* impacto de la duplicidad en consumo de recursos
-* sensibilidad al factor de amplificación $k$
-* sensibilidad a la probabilidad de falla $p_{fail}$
-* concentración de carga por contenedor
-* comportamiento bajo alta presión de micro-objetos
-
-Estos escenarios permiten analizar el sistema en diferentes escalas:
-
-* nivel GB
-* nivel TB
-* escenarios de alta concurrencia
+- análisis exploratorio (EDA)  
+- modelamiento estadístico  
+- entrenamiento de modelos de machine learning  
 
 ---
 
-## 2.8 Limitaciones del enfoque
+## 2.9 Relación con el modelo probabilístico
 
-Aunque el modelo busca capturar propiedades estructurales del sistema real, presenta las siguientes limitaciones:
+El sistema se modela como:
 
-* independencia parcial de eventos en condiciones simuladas
-* simplificación de dependencias entre servicios
-* ausencia de factores externos no modelados (red, latencia, throttling)
+$$
+X = \{ size_{gb}, file_{type}, days_{stored}, storage_{tier}, error \}
+$$
 
-Por lo tanto, los resultados deben interpretarse como aproximaciones controladas, útiles para análisis comparativo y diseño de hipótesis, pero no como representación exacta del sistema real.
+$$
+Y = \{ storage_{cost}, has_{error}, is_{duplicate} \}
+$$
+
+y el objetivo es estimar:
+
+$$
+P(Y \mid X)
+$$
+
+---
+
+## 2.10 Alcance analítico
+
+El entorno permite analizar:
+
+- distribución de tamaños  
+- comportamiento del ciclo de vida  
+- impacto de errores  
+- patrones de duplicidad  
+- relaciones entre variables  
+
+---
+
+## 2.11 Limitaciones del enfoque
+
+El modelo presenta las siguientes limitaciones:
+
+- uso de simulación en lugar de datos reales  
+- simplificación de dependencias complejas  
+- exclusión de optimizaciones internas (compresión, deduplicación física)  
+- uso de hash parcial en lugar de hash completo ⚠️  
+
+Por lo tanto, los resultados deben interpretarse como aproximaciones controladas.
+
+---
