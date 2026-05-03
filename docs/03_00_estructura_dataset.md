@@ -1,10 +1,9 @@
 ---
 🏠 [Inicio](../README.md)
 
-⬅️ [Anterior](02_00_procedencia_fuente.md)
+⬅️ [Anterior](02_procedencia_fuente.md)
 
 ➡️ [Siguiente](04_parametros_simulacion.md)
-
 ---
 
 ## 3.4 Definición de variables del dataset
@@ -84,27 +83,24 @@ $$
 ### Observaciones metodológicas
 
 - Eliminación de redundancia (MB vs GB)
-- Dependencia estructural:
 
 $$
 storage_{cost} =
 size_{gb} \cdot tarifa_{tier} \cdot \frac{days_{stored}}{30}
 $$
 
-- Variable derivada:
-
 $$
 transfer_{speed} = \frac{size}{tiempo}
 $$
 
-- Alta cardinalidad ⚠️ en hash
-- Variables de error binarias
+- Alta cardinalidad ⚠️ en hash  
+- Variables de error binarias  
 
 ---
 
-### 🔗 Navegación interna del modelo
+## 🔗 Navegación del modelo
 
-➡️ [Ir a Variables independientes](03_01_variables_independientes.md)  
-➡️ [Ir a Variables dependientes](03_02_variables_dependientes.md)  
+⬅️ [Volver al Dataset](03_estructura_dataset.md)
 
----
+➡️ [Variables independientes (X)](03_01_variables_independientes.md)  
+➡️ [Variables dependientes (Y)](03_02_variables_dependientes.md)
