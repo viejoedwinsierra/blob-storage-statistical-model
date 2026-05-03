@@ -17,6 +17,22 @@ En este contexto, el crecimiento del almacenamiento no depende únicamente del n
 - el comportamiento del ciclo de vida del dato  
 
 ---
+## Marco teórico y fundamentación
+
+El enfoque probabilístico adoptado en este trabajo se fundamenta en teorías clásicas de modelamiento estocástico y sistemas distribuidos.
+
+La generación de archivos puede interpretarse como un proceso de llegada de eventos, comúnmente modelado mediante procesos de Poisson (Ross, 2014), donde cada evento genera un artefacto almacenado.
+
+Las variables de error se modelan como procesos Bernoulli, lo cual es consistente con modelos probabilísticos de ocurrencia binaria (Casella & Berger, 2002).
+
+El comportamiento del sistema bajo condiciones normales y de falla puede interpretarse como un proceso con cambio de régimen, ampliamente estudiado en modelos de series de tiempo (Hamilton, 1994).
+
+Desde la perspectiva de sistemas distribuidos, la generación de artefactos y la aparición de duplicados se relaciona con problemas de idempotencia y reintentos en arquitecturas desacopladas (Kleppmann, 2017; Beyer et al., 2016).
+
+Adicionalmente, la detección de duplicados basada en contenido se fundamenta en técnicas de deduplicación estudiadas en sistemas de almacenamiento (Meyer & Bolosky, 2011).
+
+Este marco teórico permite conectar el modelo propuesto con fundamentos sólidos de probabilidad, estadística y sistemas distribuidos.
+---
 
 ## Enfoque probabilístico del problema
 
