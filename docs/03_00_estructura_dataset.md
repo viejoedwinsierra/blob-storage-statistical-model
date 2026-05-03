@@ -7,117 +7,73 @@
 
 ---
 
-# 3. Estructura y generación del dataset
+## 3.4 Definición de variables del dataset
 
-## 🔗 Navegación del modelo
+📌 Este dataset constituye la base del modelo estadístico.
 
-Este dataset constituye la base del modelo estadístico.  
-Puedes navegar a la definición formal de variables aquí:
+Para la definición detallada del modelo:
 
 ➡️ [Variables independientes (X)](03_01_variables_independientes.md)  
 ➡️ [Variables dependientes (Y)](03_02_variables_dependientes.md)
 
 ---
 
-## 3.1 Objetivo
+### Tabla: Definición completa de variables
 
-Construir un dataset estructurado que represente el inventario de archivos almacenados en un sistema de object storage durante un horizonte de 180 días, incorporando tanto operación normal como eventos de falla.
-
-El dataset se orienta al análisis del **costo de almacenamiento y ciclo de vida del dato**, sirviendo como base para:
-
-* Modelado estadístico del costo
-* Análisis exploratorio de datos (EDA)
-* Entrenamiento de modelos de machine learning
-* Evaluación del ciclo de vida del almacenamiento
-* Identificación de anomalías
+| Variable | Tipo de dato | Tipo de variable | Clasificación | Rol | Descripción |
+|----------|-------------|------------------|--------------|-----|-------------|
+| file_id | Texto | Identificador | - | Técnica | Identificador único del archivo |
+| file_type | Categórica | Nominal | X | Explicativa | Tipo de archivo (json, jpg, pdf, mp4) |
+| size_gb | Numérica | Cuantitativa continua | X | Clave | Tamaño del archivo en GB |
+| storage_tier | Categórica | Nominal | X | Clave | Nivel de almacenamiento (hot, cool, archive) |
+| days_stored | Numérica | Cuantitativa discreta | X | Clave | Tiempo de almacenamiento en días |
+| days_since_last_access | Numérica | Cuantitativa discreta | X | Explicativa | Tiempo desde último acceso |
+| read_level | Categórica | Ordinal | X | Explicativa | Nivel de lectura del archivo |
+| modify_level | Categórica | Ordinal | X | Explicativa | Nivel de modificación |
+| movement_storage | Numérica (0/1) | Binaria | X | Explicativa | Cambio de tier |
+| transfer_duration_sec | Numérica | Cuantitativa continua | X | Explicativa | Duración de transferencia |
+| transfer_speed_mbps | Numérica | Cuantitativa continua | X | Derivada ⚠️ | Variable dependiente de tamaño y tiempo |
+| hash_head | Texto | Cualitativa nominal | X | Explicativa ⚠️ | Segmento inicial del contenido |
+| hash_tail | Texto | Cualitativa nominal | X | Explicativa ⚠️ | Segmento final del contenido |
+| error_duplicado | Numérica (0/1) | Binaria | X | Secundaria | Duplicidad lógica |
+| error_orphan | Numérica (0/1) | Binaria | X | Secundaria | Inconsistencia |
+| error_null | Numérica (0/1) | Binaria | X | Secundaria | Registro vacío |
+| error_blob_timeout | Numérica (0/1) | Binaria | X | Secundaria | Error operativo |
+| storage_cost | Numérica | Cuantitativa continua | Y | Dependiente | Costo de almacenamiento |
 
 ---
 
-## 3.2 Definición formal de la unidad de análisis
+### Clasificación formal del modelo
 
-Se define el dataset como:
+#### Variable dependiente
 
 $$
-\mathcal{D} = \{u_i\}_{i=1}^{M_d}
+Y = storage_{cost}
 $$
 
-donde cada instancia $u_i$ corresponde a un **archivo almacenado (blob)**.
+---
 
-Cada registro representa:
+#### Variables independientes
 
-* un archivo físico
-* atributos de tamaño y tipo
-* variables temporales
-* condiciones operativas
-* variables de error asociadas
+$$
+X = \{
+size_{gb},
+file_{type},
+storage_{tier},
+days_{stored},
+error_i,
+hash_{head},
+hash_{tail}
+\}
+$$
 
 ---
 
-## 3.3 Fuente de datos
-
-El dataset puede construirse bajo dos esquemas:
-
-### 3.3.1 Dataset real
-
-Derivado de Blob Storage mediante:
-
-* enumeración de blobs
-* extracción de metadatos físicos
-
-### 3.3.2 Dataset simulado
-
-Generado mediante un modelo probabilístico controlado que replica:
-
-* generación de archivos
-* distribución de tamaños
-* asignación de almacenamiento
-* inyección de errores
-
----
-
-## 3.4 Definición de variables del dataset
-
-📌 Para detalle completo de variables:
-
-➡️ [Ir a Variables independientes (X)](03_01_variables_independientes.md)  
-➡️ [Ir a Variables dependientes (Y)](03_02_variables_dependientes.md)
-
----
-
-### Tabla: Definición de variables
-
-| Variable | Tipo | Rol |
-|----------|------|-----|
-| file_type | Categórica | X |
-| size_gb | Numérica | X |
-| storage_tier | Categórica | X |
-| days_stored | Numérica | X |
-| hash_head | Texto ⚠️ | X |
-| hash_tail | Texto ⚠️ | X |
-| error_* | Binaria | X |
-| storage_cost | Numérica | Y |
-
----
-
-## 🔄 Relación del dataset con el modelo
-
-El dataset permite modelar la relación:
+### Relación del modelo
 
 $$
 Y = f(X)
 $$
-
-donde:
-
-$$
-X = \{ size_{gb}, file_{type}, storage_{tier}, days_{stored}, error, hash \}
-$$
-
-$$
-Y = \{ storage_{cost} \}
-$$
-
-De forma probabilística:
 
 $$
 P(Y \mid X)
@@ -125,111 +81,30 @@ $$
 
 ---
 
-## 🔗 Navegación del modelo
+### Observaciones metodológicas
 
-Puedes profundizar en las variables:
-
-➡️ [Variables independientes (X)](03_01_variables_independientes.md)  
-➡️ [Variables dependientes (Y)](03_02_variables_dependientes.md)
-
----
-
-## 3.5 Tipología de archivos
-
-Se limita el sistema a cuatro tipos principales:
-
-| Tipo | Uso |
-|------|----|
-| JSON | Metadatos |
-| JPG | Imágenes |
-| PDF | Documentos |
-| MP4 | Multimedia |
-
----
-
-## 3.6 Modelo de costo de almacenamiento
+- Eliminación de redundancia (MB vs GB)
+- Dependencia estructural:
 
 $$
 storage_{cost} =
 size_{gb} \cdot tarifa_{tier} \cdot \frac{days_{stored}}{30}
 $$
 
----
-
-## 3.7 Variables de error
+- Variable derivada:
 
 $$
-error \in \{0,1\}
+transfer_{speed} = \frac{size}{tiempo}
 $$
 
----
-
-## 3.8 Variables derivadas de contenido
-
-Variables utilizadas:
-
-- `hash_head`
-- `hash_tail`
-
-Estas permiten:
-
-- detección de duplicados
-- análisis de persistencia
-- identificación de recurrencia
-
-⚠️ Alta cardinalidad
+- Alta cardinalidad ⚠️ en hash
+- Variables de error binarias
 
 ---
 
-## 3.9 Relación estructural del modelo
+### 🔗 Navegación interna del modelo
 
-$$
-storage_{cost} \approx f(size_{gb}, days_{stored}, storage_{tier})
-$$
-
-$$
-transfer_{speed} \approx \frac{size}{tiempo}
-$$
-
----
-
-## 3.10 Consideraciones metodológicas
-
-- Eliminación de redundancia
-- Separación de variables
-- Control de dependencias
-- Uso de variables binarias
-
----
-
-## 🔁 Navegación de retorno
-
-Una vez revisadas las variables, puedes volver aquí:
-
-⬅️ [Volver al dataset](03_estructura_dataset.md)
-
----
-
-## 3.11 Uso en machine learning
-
-$$
-Y = storage_{cost}
-$$
-
-Aplicaciones:
-
-- regresión
-- detección de anomalías
-- optimización de almacenamiento
-
----
-
-## 3.12 Consideraciones finales
-
-El dataset permite:
-
-- análisis reproducible
-- validación de hipótesis
-- entrenamiento de modelos
+➡️ [Ir a Variables independientes](03_01_variables_independientes.md)  
+➡️ [Ir a Variables dependientes](03_02_variables_dependientes.md)  
 
 ---
