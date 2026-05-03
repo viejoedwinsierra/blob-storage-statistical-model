@@ -31,7 +31,6 @@ Desde la perspectiva de sistemas distribuidos, la generación de artefactos y la
 
 Adicionalmente, la detección de duplicados basada en contenido se fundamenta en técnicas de deduplicación estudiadas en sistemas de almacenamiento (Meyer & Bolosky, 2011).
 
-Este marco teórico permite conectar el modelo propuesto con fundamentos sólidos de probabilidad, estadística y sistemas distribuidos.
 ---
 
 ## Enfoque probabilístico del problema
