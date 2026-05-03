@@ -3,7 +3,7 @@
 
 ⬅️ [Anterior](02_procedencia_fuente.md)
 
-➡️ [Siguiente](02_rmarco_teorico_blobstorage.md)
+➡️ [Siguiente](03_00_estructura_dataset.md)
 
 ---
 # 3. Marco teórico
