@@ -25,7 +25,7 @@ Este dataset representa el comportamiento de un sistema de almacenamiento tipo B
 
 > 📌 **Abrebocas visual del sistema modelado**
 
-![Arquitectura del dataset](../img/dataset_overview.png)
+![Arquitectura del dataset](../img/descriptive/storage_cost_log_histogram.png)
 
 **Figura 1.** Representación conceptual del dataset generado por el simulador.
 
