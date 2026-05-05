@@ -56,11 +56,9 @@ Representa:
 
 #### 📊 Evidencia multivariable
 
-![Costo vs tamaño](../img/advanced/cost_vs_size.png)
+![Relaciones costo](../img/advanced/target_relationships_storage_cost.png)
 
-![Costo vs tiempo](../img/advanced/cost_vs_days.png)
-
-![Costo por tier](../img/advanced/cost_by_tier_boxplot.png)
+![Costo vs tamaño](../img/advanced/scatter_size_mb_vs_storage_cost.png)
 
 ---
 
@@ -114,9 +112,7 @@ Variables:
 
 #### 📊 Evidencia multivariable
 
-![Error vs tamaño](../img/advanced/error_vs_size.png)
-
-![Error vs tiempo](../img/advanced/error_vs_days.png)
+![Relaciones error](../img/advanced/target_relationships_has_error.png)
 
 ---
 
@@ -132,7 +128,7 @@ Variables:
 | Comportamiento             | Esperado | Observado    |
 | -------------------------- | -------- | ------------ |
 | Baja frecuencia de errores | Sí       | ✔ Confirmado |
-| Relación con tamaño        | Posible  | ✔ Parcial    |
+| Relación con variables     | Posible  | ✔ Parcial    |
 | Distribución balanceada    | No       | ✔ No         |
 
 ---
@@ -160,25 +156,23 @@ Variables:
 
 #### 📊 Evidencia multivariable
 
-![Movimiento vs tiempo](../img/advanced/move_vs_days.png)
-
-![Actividad vs acceso](../img/advanced/active_vs_access.png)
+![Relaciones duración](../img/advanced/target_relationships_transfer_duration_sec.png)
 
 ---
 
 #### 🧠 Interpretación
 
-* Relacionadas con ciclo de vida del archivo
-* Influenciadas por acceso y tiempo
+* Relacionadas con dinámica operativa del sistema
+* Influenciadas por carga, tiempo y condiciones de red
 
 ---
 
 #### 📈 Valores esperados vs observados
 
-| Comportamiento                  | Esperado | Observado    |
-| ------------------------------- | -------- | ------------ |
-| Movimiento con el tiempo        | Sí       | ✔ Confirmado |
-| Actividad dependiente de acceso | Sí       | ✔ Confirmado |
+| Comportamiento             | Esperado | Observado    |
+| -------------------------- | -------- | ------------ |
+| Dependencia de condiciones | Sí       | ✔ Confirmado |
+| Variabilidad operativa     | Alta     | ✔ Confirmado |
 
 ---
 
@@ -186,8 +180,8 @@ Variables:
 
 * Variables útiles para:
 
-  * optimización de almacenamiento
-  * lifecycle management
+  * análisis de performance
+  * optimización operativa
 
 ---
 
