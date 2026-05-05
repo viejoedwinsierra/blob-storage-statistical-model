@@ -22,6 +22,52 @@ Cada etapa está documentada y respaldada por reportes y decisiones metodológic
 
 ---
 
+### 🗂️ Navegación completa de la documentación (flujo del trabajo)
+
+La documentación del proyecto está organizada como un recorrido estructurado que va desde el contexto hasta la validación final.
+
+| Etapa  | Documento                                                           | Descripción                                   |
+| ------ | ------------------------------------------------------------------- | --------------------------------------------- |
+| 1️⃣    | [Contexto del problema](docs/01_contexto_problema.md)               | Problema real, motivación y contexto cloud    |
+| 2️⃣    | [Fuente de datos](docs/02_fuente_datos.md)                          | Origen y naturaleza de los datos simulados    |
+| 3️⃣    | [Estructura del dataset](docs/03_estructura_dataset.md)             | Variables y diseño del dataset                |
+| 3.1    | [Variables independientes](docs/03_01_variables_independientes.md)  | Factores explicativos del sistema             |
+| 3.2    | [Variables dependientes](docs/03_02_variables_dependientes.md)      | Variables objetivo (costo, duración, error)   |
+| 4️⃣    | [Parámetros de simulación](docs/04_parametros_simulacion.md)        | Cómo se generan los datos (Monte Carlo)       |
+| 5️⃣    | [Modelamiento estadístico](docs/05_modelamiento_estadistico.md)     | Construcción de modelos (OLS, GLM, logística) |
+| 6️⃣    | [Preguntas analíticas](docs/06_preguntas_analiticas.md)             | Interpretación del sistema                    |
+| 7️⃣    | [Limitaciones](docs/07_limitaciones_metodologia.md)                 | Restricciones del enfoque                     |
+| 8️⃣    | [Validaciones](docs/08_validaciones_calidad.md)                     | Consistencia de datos y modelos               |
+| 9️⃣    | [Modelo causal de fallas](docs/09_modelo_causal_fallas.md)          | Explicación estructural del sistema           |
+| 🔟     | [Referencias](docs/10_referencias.md)                               | Soporte teórico                               |
+| 1️⃣1️⃣ | [Comparativo final](docs/11_comparativo_modelamiento_evaluacion.md) | Evaluación y conclusiones del proyecto        |
+
+---
+
+### 🔄 Flujo lógico del proyecto
+
+```text
+Contexto → Datos → EDA → Premodeling → Modelamiento → Evaluación → Conclusiones
+```
+
+---
+
+### 🎯 Cómo usar esta tabla
+
+* 📘 **Lectura completa (tesis)** → sigue el orden 1 → 11
+* ⚡ **Ir directo a resultados** → salta a:
+
+  * Modelamiento
+  * Evaluación
+  * Comparativo final
+* 🧠 **Entender el sistema** → revisa:
+
+  * Variables
+  * Simulación
+  * Modelo causal
+
+---
+
 ## 🧭 Cómo navegar la documentación
 
 Dependiendo de tu objetivo, puedes recorrer el proyecto de distintas formas:
