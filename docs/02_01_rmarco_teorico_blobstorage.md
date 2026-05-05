@@ -1,209 +1,252 @@
----
 🏠 [Inicio](../README.md)
-
-⬅️ [Anterior](02_procedencia_fuente.md)
-
+⬅️ [Anterior](02_00_procedencia_fuente.md)
 ➡️ [Siguiente](03_00_estructura_dataset.md)
 
 ---
-# 3. Marco teórico
 
-## 3.1 Big Data y Data Engineering
+# 3. Marco teórico ampliado: evolución hacia cloud, almacenamiento y facturación
 
-El concepto de Big Data se refiere al manejo de grandes volúmenes de datos caracterizados por las conocidas *5V*: volumen, velocidad, variedad, veracidad y valor (Laney, 2001). En entornos cloud, estos datos son generados por sistemas distribuidos que producen flujos continuos de información.
+## 3.1 Transformación digital: de on-premise a cloud
 
-En arquitecturas modernas, el almacenamiento de objetos (Object Storage) —como AWS S3 y Azure Blob Storage— actúa como repositorio central de datos no estructurados, soportando escalabilidad horizontal prácticamente ilimitada (Kleppmann, 2017).
+En las últimas dos décadas, las organizaciones han transitado de arquitecturas **on-premise** hacia modelos **cloud computing**, motivadas por la necesidad de:
 
-El Data Engineering se encarga de diseñar y operar pipelines que permiten:
+* escalabilidad bajo demanda
+* reducción de costos de infraestructura
+* elasticidad operativa
+* acceso global a datos
 
-* ingestión de datos
-* almacenamiento distribuido
-* procesamiento batch y streaming
-* exposición para análisis
+En entornos tradicionales *on-premise*, las empresas debían:
 
-Un pipeline típico puede representarse como:
+* invertir en infraestructura física (CAPEX)
+* dimensionar capacidad anticipadamente
+* asumir costos fijos independientemente del uso
+
+En contraste, el modelo cloud introduce un esquema **pay-as-you-go (OPEX)**, donde el costo depende directamente del consumo real de recursos (Armbrust et al., 2010).
+
+---
+
+## 3.2 Object Storage como núcleo del ecosistema de datos
+
+Dentro de la arquitectura cloud, el almacenamiento de objetos (Object Storage), como Azure Blob Storage o Amazon S3, se ha convertido en el componente central para datos no estructurados.
+
+Sus características principales incluyen:
+
+* almacenamiento masivo y distribuido
+* durabilidad alta (≥ 99.999999999%)
+* acceso basado en objetos
+* separación entre cómputo y almacenamiento
+
+(Kleppmann, 2017)
+
+En este contexto, cada archivo almacenado representa una unidad económica y operativa, lo que justifica el enfoque micro-analítico adoptado en este trabajo.
+
+---
+
+## 3.3 Problema real en empresas: pérdida de control del costo
+
+Uno de los principales problemas que enfrentan las organizaciones al migrar a cloud es:
+
+> **la dificultad para controlar, predecir y optimizar los costos de almacenamiento**
+
+Este problema surge por múltiples factores:
+
+### 3.3.1 Facturación basada en múltiples dimensiones
+
+El costo en sistemas como Blob Storage depende de:
+
+* volumen almacenado (GB/mes)
+* tipo de almacenamiento (hot, cool, archive)
+* número de operaciones (lectura/escritura)
+* transferencia de datos (egress)
+* redundancia (LRS, GRS, etc.)
+
+Esto genera una estructura de costo:
 
 $$
-D_{raw} \rightarrow D_{processed} \rightarrow D_{analytical}
+Cost = f(size, time, tier, operations, transfer)
+$$
+
+que es inherentemente **no lineal y difícil de estimar manualmente**.
+
+---
+
+### 3.3.2 Crecimiento no controlado de datos
+
+Las organizaciones suelen enfrentar:
+
+* acumulación de datos históricos
+* duplicidad de archivos
+* falta de políticas de lifecycle management
+* almacenamiento de datos innecesarios
+
+Esto genera fenómenos como:
+
+* **costos ocultos**
+* almacenamiento ineficiente
+* aumento progresivo del gasto
+
+---
+
+### 3.3.3 Falta de visibilidad a nivel granular
+
+En muchos casos, las empresas solo observan:
+
+* costo total mensual
+
+pero no:
+
+* costo por archivo
+* costo por tipo de dato
+* costo por unidad de negocio
+
+Esto limita la capacidad de optimización.
+
+---
+
+## 3.4 Relación con el problema abordado en este trabajo
+
+El presente estudio aborda directamente este problema mediante:
+
+* modelamiento a nivel de archivo
+* simulación de escenarios operativos
+* estimación del costo en función de variables observables
+
+En particular, se busca modelar:
+
+$$
+P(storage_cost \mid X)
 $$
 
 donde:
 
-* $D_{raw}$: datos crudos
-* $D_{processed}$: datos transformados
-* $D_{analytical}$: datos listos para modelado
+$$
+X = { size_{gb}, days_{stored}, storage_{tier}, error }
+$$
 
-En este proyecto, el pipeline es simulado, lo que permite controlar las variables del sistema y evaluar su comportamiento sin depender de entornos productivos.
+Esto permite responder preguntas clave para la industria:
+
+* ¿Qué variables explican el costo?
+* ¿Cómo optimizar almacenamiento?
+* ¿Dónde se generan ineficiencias?
 
 ---
 
-## 3.2 Fundamentos probabilísticos
+## 3.5 Fundamentos probabilísticos del sistema
 
-El comportamiento de los sistemas distribuidos puede modelarse mediante herramientas de probabilidad, especialmente en lo referente a la llegada de eventos y generación de artefactos.
+El comportamiento del sistema se modela mediante variables aleatorias:
 
-### 3.2.1 Proceso de Poisson
-
-La llegada de eventos se modela como:
+### Llegada de datos
 
 $$
 X_t \sim \text{Poisson}(\lambda)
 $$
 
-donde:
-
-* $X_t$: número de eventos en el tiempo $t$
-* $\lambda$: tasa promedio
-
-Este modelo es apropiado para eventos independientes en el tiempo (Ross, 2014).
+representando la generación de archivos en el tiempo (Ross, 2014).
 
 ---
 
-### 3.2.2 Modelo de duplicidad
-
-La ocurrencia de errores o duplicados puede modelarse como:
+### Errores y duplicidad
 
 $$
-D_t \sim \text{Binomial}(X_t, p_{fail})
+error \sim \text{Bernoulli}(p)
 $$
 
-donde:
+$$
+duplicates \sim \text{Binomial}(n, p)
+$$
 
-* $D_t$: número de eventos con error
-* $p_{fail}$: probabilidad de falla
-
-Este modelo permite cuantificar la proporción de eventos afectados (Casella & Berger, 2002).
+lo cual permite modelar calidad del sistema (Casella & Berger, 2002).
 
 ---
 
-### 3.2.3 Cambio de régimen
+### Cambio de régimen
 
-El sistema puede alternar entre estados:
+Los sistemas reales presentan estados:
+
+* operación normal
+* degradación
+* incidentes
+
+Esto se modela como:
 
 $$
 incident_t \sim \text{Bernoulli}(p_{incident})
 $$
 
-y:
-
-$$
-\lambda_t =
-\begin{cases}
-\lambda & \text{si } incident_t = 0 \
-k \cdot \lambda & \text{si } incident_t = 1
-\end{cases}
-$$
-
-Esto modela sistemas con comportamiento dinámico bajo condiciones de falla (Hamilton, 1994).
+(Hamilton, 1994)
 
 ---
 
-## 3.3 Modelos estadísticos
+## 3.6 Modelamiento estadístico aplicado al problema
 
-El modelado estadístico permite explicar y predecir el comportamiento del sistema.
+El uso de modelos estadísticos permite transformar el problema de negocio en un problema cuantificable.
 
-### 3.3.1 Regresión lineal
+### Regresión para costo
 
-$$
-Y = \beta_0 + \beta_1 X + \epsilon
-$$
-
-donde:
-
-* $Y$: variable respuesta (ej. volumen de almacenamiento)
-* $X$: variable explicativa (ej. número de transacciones)
-* $\epsilon$: error
-
-Este modelo permite identificar tendencias y relaciones lineales.
-
----
-
-### 3.3.2 Regresión logística
-
-Para modelar la probabilidad de error:
-
-$$
-P(Y=1|X) = \frac{1}{1 + e^{-z}}
-$$
-
-$$
-z = \beta_0 + \sum_{i=1}^{n} \beta_i X_i
-$$
-
-Este modelo es fundamental para clasificación binaria y permite interpretar el impacto de cada variable (Hosmer et al., 2013).
-
----
-
-### 3.3.3 Modelos de conteo
-
-Para datos discretos:
-
-* Poisson Regression
-* Negative Binomial
-
-Estos modelos permiten capturar sobre-dispersión en los datos.
-
----
-
-## 3.4 Machine Learning
-
-El Machine Learning permite capturar relaciones complejas no lineales entre variables.
-
-### 3.4.1 Aprendizaje supervisado
-
-Se busca modelar:
+El costo se modela como:
 
 $$
 Y = f(X)
 $$
 
-donde:
+donde, debido a su naturaleza:
 
-* $X$: conjunto de variables observables
-* $Y$: variable objetivo (error/no error)
+* positiva
+* continua
+* asimétrica
 
-Algoritmos relevantes:
+es apropiado el uso de modelos como:
 
-* Random Forest
-* Gradient Boosting
-* XGBoost
+* GLM Gamma
+* modelos log-lineales
 
-Estos modelos capturan interacciones complejas y no linealidades (Hastie et al., 2009).
-
----
-
-### 3.4.2 Detección de anomalías
-
-Permite identificar patrones inusuales sin etiquetas:
-
-$$
-X_i \notin \mathcal{D}_{normal}
-$$
-
-Métodos:
-
-* Isolation Forest
-* Clustering
-* Autoencoders
-
-Esto es relevante para detectar comportamientos no esperados en almacenamiento.
+(McCullagh & Nelder, 1989)
 
 ---
 
-### 3.4.3 Transferencia simulación–realidad
+### Modelamiento de duración
 
-Uno de los principales retos es evaluar:
+La duración de transferencia sigue relaciones multiplicativas:
 
 $$
-\text{Generalización} = f_{sim}(X) \rightarrow f_{real}(X)
+\log(Y) = \beta_0 + \beta X + \epsilon
 $$
 
-El objetivo es determinar si los patrones aprendidos en datos simulados son transferibles a sistemas reales.
+lo que justifica el uso de modelos log-lineales.
 
 ---
 
-## 3.5 Integración con el sistema simulado
+### Clasificación de errores
 
-El sistema puede representarse como un modelo dinámico:
+La probabilidad de error se modela como:
+
+$$
+P(Y=1|X) = \frac{1}{1 + e^{-z}}
+$$
+
+(Hosmer et al., 2013)
+
+---
+
+## 3.7 Rol de la simulación en el contexto empresarial
+
+El uso de simulación (ver sección 2) permite:
+
+* replicar escenarios que no son accesibles en producción
+* evaluar estrategias de optimización
+* analizar impacto de decisiones
+
+Esto es clave porque en entornos reales:
+
+* experimentar directamente puede ser costoso
+* los datos pueden ser incompletos
+* los cambios pueden afectar producción
+
+---
+
+## 3.8 Relación con el sistema simulado
+
+El sistema puede representarse como:
 
 $$
 x_{t+1} = f(x_t, u_t, w_t)
@@ -211,31 +254,47 @@ $$
 
 donde:
 
-* $x_t$: estado del sistema
-* $u_t$: decisiones (optimización)
+* $x_t$: estado del almacenamiento
+* $u_t$: decisiones (tiering, eliminación)
 * $w_t$: incertidumbre
 
-El costo acumulado se modela como:
+El costo acumulado:
 
 $$
-J_T = \mathbb{E} \left[ \sum_{t=1}^{T} C(x_t, u_t, w_t) \right]
+J_T = \mathbb{E} \left[ \sum_{t=1}^{T} C(x_t) \right]
 $$
 
-Este modelo permite integrar:
+representa el gasto total del sistema.
 
-* simulación
-* estadística
-* machine learning
-* optimización
+---
+
+## 3.9 Implicaciones prácticas para empresas
+
+El enfoque desarrollado permite:
+
+* estimar costos antes de implementarlos
+* diseñar políticas de almacenamiento
+* detectar ineficiencias
+* simular escenarios de crecimiento
+
+Esto es especialmente relevante en contextos de:
+
+* migración a cloud
+* optimización de costos
+* gobierno de datos
 
 ---
 
 ## Referencias
 
+* Armbrust, M. et al. (2010). *A View of Cloud Computing*.
 * Casella, G., & Berger, R. (2002). *Statistical Inference*.
 * Hamilton, J. (1994). *Time Series Analysis*.
 * Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning*.
-* Hosmer, D., Lemeshow, S., & Sturdivant, R. (2013). *Applied Logistic Regression*.
+* Hosmer, D. et al. (2013). *Applied Logistic Regression*.
 * Kleppmann, M. (2017). *Designing Data-Intensive Applications*.
-* Laney, D. (2001). 3D Data Management.
+* Laney, D. (2001). *3D Data Management*.
+* McCullagh, P., & Nelder, J. (1989). *Generalized Linear Models*.
 * Ross, S. (2014). *Introduction to Probability Models*.
+
+---

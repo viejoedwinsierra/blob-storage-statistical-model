@@ -1,177 +1,167 @@
-# Simulación Monte Carlo y Modelamiento Estadístico para Blob Storage
+# 📊 Simulación Monte Carlo y Modelamiento Estadístico para Blob Storage
 
-Este repositorio documenta el trabajo de simulación, análisis exploratorio, premodelamiento, modelamiento estadístico y evaluación de modelos sobre escenarios sintéticos de operación de Blob Storage.
+Este repositorio contiene un proyecto integral de **simulación, análisis estadístico y modelamiento aplicado** a operaciones de Blob Storage, con énfasis en:
 
-El objetivo principal es construir un pipeline reproducible que permita analizar duración de transferencia, costo de almacenamiento y ocurrencia de errores, usando modelos estadísticos interpretables y evaluación posterior sobre datos nuevos.
+* Duración de transferencia
+* Costo de almacenamiento
+* Ocurrencia de errores
 
----
-
-## Navegación principal
-
-### Documentación metodológica
-
-1. [Contexto del problema](docs/01_contexto_problema.md)
-2. [Procedencia y fuente de los datos](docs/02_00_procedencia_fuente.md)
-3. [Marco teórico de Blob Storage](docs/02_01_rmarco_teorico_blobstorage.md)
-4. [Estructura del dataset](docs/03_00_estructura_dataset.md)
-5. [Variables independientes](docs/03_01_variables_independientes.md)
-6. [Variables dependientes](docs/03_02_variables_dependientes.md)
-7. [Parámetros de simulación](docs/04_parametros_simulacion.md)
-8. [Modelamiento estadístico](docs/05_modelamiento_estadistico.md)
-9. [Preguntas analíticas](docs/06_preguntas_analiticas.md)
-10. [Limitaciones metodológicas](docs/07_limitaciones_metodologia.md)
-11. [Validaciones de calidad](docs/08_validaciones_calidad.md)
-12. [Modelo causal de fallas](docs/09_modelo_causal_fallas.md)
-13. [Referencias](docs/10_referencias.md)
-14. [Comparativo modelamiento vs evaluación](docs/11_comparativo_modelamiento_evaluacion.md)
-
-### Reportes HTML generados
-
-- [Reporte descriptivo univariado](report/report_descriptive.html)
-- [Reporte avanzado multivariado](report/report_advanced.html)
-- [Reporte de premodelamiento](report/report_premodeling.html)
-- [Reporte de modelamiento estadístico](report/report_modeling.html)
-- [Reporte de evaluación con datos nuevos](report/report_model_evaluation.html)
-
-### Código actualizado sugerido
-
-Los archivos ajustados durante la evolución del pipeline se encuentran en:
-
-- [`src_updates/modeling/`](src_updates/modeling/)
-- [`src_updates/model_evaluation/`](src_updates/model_evaluation/)
-- [`src_updates/run_premodeling_modeling.py`](src_updates/run_premodeling_modeling.py)
-- [`src_updates/run_evaluate_saved_models.py`](src_updates/run_evaluate_saved_models.py)
-
-Estos archivos están listos para copiarse dentro de `src/` respetando la estructura original del proyecto.
+El trabajo está diseñado como un **pipeline reproducible y defendible**, que va desde la generación de datos hasta la evaluación de modelos sobre información completamente nueva.
 
 ---
 
-## Estructura del paquete
+## 🎯 ¿Qué encontrarás en este proyecto?
+
+Este repositorio no es solo código o reportes aislados. Es una **cadena completa de evidencia estadística**, estructurada en cinco etapas:
+
+```text
+Simulación → Análisis → Premodeling → Modelamiento → Evaluación
+```
+
+Cada etapa está documentada y respaldada por reportes y decisiones metodológicas explícitas.
+
+---
+
+## 🧭 Cómo navegar la documentación
+
+Dependiendo de tu objetivo, puedes recorrer el proyecto de distintas formas:
+
+### 📘 Lectura académica (tipo tesis)
+
+Sigue este orden:
+
+1. Contexto del problema
+2. Fuente y estructura de datos
+3. Marco teórico
+4. Análisis exploratorio
+5. Premodeling
+6. Modelamiento
+7. Evaluación
+8. Limitaciones y conclusiones
+
+👉 Empieza aquí:
+
+* [Contexto del problema](docs/01_contexto_problema.md)
+
+---
+
+### 📈 Análisis rápido de resultados
+
+Si quieres entender rápidamente los hallazgos:
+
+* [Reporte de modelamiento](report/report_modeling.html)
+* [Evaluación con datos nuevos](report/report_model_evaluation.html)
+* [Comparativo modelamiento vs evaluación](docs/11_comparativo_modelamiento_evaluacion.md)
+
+---
+
+### ⚙️ Revisión técnica del pipeline
+
+Para entender implementación:
+
+* [`src_updates/modeling/`](src_updates/modeling/)
+* [`src_updates/model_evaluation/`](src_updates/model_evaluation/)
+* [`run_premodeling_modeling.py`](src_updates/run_premodeling_modeling.py)
+* [`run_evaluate_saved_models.py`](src_updates/run_evaluate_saved_models.py)
+
+---
+
+## 🧱 Estructura del proyecto
 
 ```text
 .
-├── README.md
-├── .gitignore
-├── docs/
-│   ├── 01_contexto_problema.md
-│   ├── 02_00_procedencia_fuente.md
-│   ├── 02_01_rmarco_teorico_blobstorage.md
-│   ├── 03_00_estructura_dataset.md
-│   ├── 03_01_variables_independientes.md
-│   ├── 03_02_variables_dependientes.md
-│   ├── 04_parametros_simulacion.md
-│   ├── 05_modelamiento_estadistico.md
-│   ├── 06_preguntas_analiticas.md
-│   ├── 07_limitaciones_metodologia.md
-│   ├── 08_validaciones_calidad.md
-│   ├── 09_modelo_causal_fallas.md
-│   ├── 10_referencias.md
-│   └── 11_comparativo_modelamiento_evaluacion.md
-├── report/
-│   ├── report_descriptive.html
-│   ├── report_advanced.html
-│   ├── report_premodeling.html
-│   ├── report_modeling.html
-│   └── report_model_evaluation.html
-├── img/
-├── datasets/
-└── src_updates/
+├── docs/                # Documentación metodológica completa
+├── report/              # Reportes HTML generados
+├── datasets/            # Datos simulados
+├── src_updates/         # Código actualizado del pipeline
+├── img/                 # Recursos visuales
+└── README.md
 ```
 
 ---
 
-## Relación entre informes
+## 🔗 Relación entre los reportes
 
-El trabajo se organiza como una cadena de evidencia:
+Los reportes no son independientes. Están diseñados como una secuencia lógica:
 
-1. **Reporte descriptivo**: caracteriza el dataset, la calidad de datos, variables numéricas, categóricas y outliers.
-2. **Reporte avanzado multivariado**: analiza relaciones entre variables, correlaciones, redundancias, fuga de información y transformaciones sugeridas.
-3. **Reporte premodeling**: documenta targets, variables candidatas, encoding y transformaciones previas al entrenamiento.
-4. **Reporte modeling**: entrena modelos estadísticos interpretables y presenta métricas internas.
-5. **Reporte model evaluation**: carga modelos persistidos y evalúa sobre datos nuevos sin reentrenar.
+1. **Descriptivo**
+   → Calidad de datos, distribuciones, outliers
 
-Esta relación permite sostener que la simulación no se queda únicamente en generación de datos, sino que alimenta un proceso completo de análisis y validación estadística.
+2. **Multivariado**
+   → Relaciones, correlaciones, redundancias
 
----
+3. **Premodeling**
+   → Selección de variables, transformaciones
 
-## Síntesis metodológica
+4. **Modelamiento**
+   → Entrenamiento y métricas internas
 
-El pipeline implementado sigue la siguiente lógica:
+5. **Evaluación**
+   → Validación con datos nuevos sin reentrenar
 
-```text
-Simulación Monte Carlo
-        ↓
-Preparación y limpieza
-        ↓
-Análisis descriptivo
-        ↓
-Análisis multivariado exploratorio
-        ↓
-Premodeling
-        ↓
-Modelamiento estadístico
-        ↓
-Persistencia de modelos
-        ↓
-Evaluación sobre datos nuevos
-```
-
-La fase de evaluación se considera crítica porque separa el ajuste inicial del modelo de su capacidad de generalización. Los modelos guardados se aplican sobre un dataset nuevo generado con la misma configuración experimental, sin reentrenamiento.
+Esta estructura permite pasar de exploración a **validación real de modelos**.
 
 ---
 
-## Resultados principales
+## 🧪 Enfoque metodológico
 
-### Duración de transferencia
+El proyecto se basa en:
 
-El modelo OLS log-lineal presenta el mejor desempeño para `transfer_duration_sec`, con R2 cercano a 0.96 tanto en modelamiento como en evaluación. Esto indica alta estabilidad y adecuada generalización.
+* **Simulación Monte Carlo** para generar datos controlados
+* **Estadística aplicada** para análisis e inferencia
+* **Modelos interpretables** (OLS, GLM, Logística)
+* **Evaluación fuera de muestra realista**
 
-El GLM Gamma log aplicado a duración presenta R2 cercano a 0.50, por lo que se considera un modelo débil para este target.
-
-### Costo de almacenamiento
-
-El GLM Gamma log presenta el mejor desempeño para `storage_cost`, con R2 cercano a 0.92 en entrenamiento y evaluación. Esto es coherente con la naturaleza positiva y asimétrica del costo.
-
-El OLS log-lineal para costo es estable, pero con capacidad explicativa moderada.
-
-### Ocurrencia de errores
-
-La regresión logística mantiene ROC AUC cercano a 0.81, lo que indica buena capacidad discriminante. Sin embargo, el recall es bajo, por lo que se recomienda revisar el umbral de clasificación si el objetivo operativo es detectar más eventos positivos.
+Un elemento clave es que los modelos se evalúan en un **dataset completamente nuevo**, lo que aproxima un escenario de producción.
 
 ---
 
-## Conclusiones de la prueba
+## 📊 Resultados clave (visión ejecutiva)
 
-1. La simulación Monte Carlo permitió construir un dataset controlado y suficientemente rico para análisis estadístico.
-2. La fase descriptiva y multivariada permitió identificar variables relevantes, colas pesadas, outliers y posibles fugas de información.
-3. El premodeling dejó trazabilidad sobre transformaciones, encoding y selección de variables por target.
-4. Los modelos estadísticos interpretables fueron suficientes para capturar patrones relevantes sin recurrir a machine learning complejo.
-5. La evaluación sobre datos nuevos confirmó estabilidad en los modelos principales y permitió detectar modelos débiles.
-6. La persistencia de modelos evita reentrenamiento innecesario y permite evaluación posterior reproducible.
+* **Duración**
+  → OLS log-linear altamente estable (R² ≈ 0.96)
 
----
+* **Costo**
+  → GLM Gamma es el mejor modelo (R² ≈ 0.92)
 
-## Recomendaciones finales
+* **Errores**
+  → Regresión logística con buen ROC AUC (~0.81)
+  → Pero bajo recall (limitación importante)
 
-- Usar OLS log-linear como modelo principal para duración de transferencia.
-- Usar GLM Gamma log como modelo principal para costo de almacenamiento.
-- Mantener regresión logística para ocurrencia de errores, pero revisar threshold.
-- No usar el GLM Gamma log para duración como modelo final.
-- Mantener los modelos `.pkl` fuera del repositorio Git por tamaño y porque son artefactos regenerables.
+* **Generalización**
+  → No hay degradación entre entrenamiento y evaluación
 
 ---
 
-## Notas de reproducibilidad
+## 🧠 Qué hace valioso este proyecto
 
-Los archivos `.pkl`, datasets grandes y salidas generadas deben permanecer fuera de Git. Para ello se incluye un `.gitignore` que excluye artefactos pesados y regenerables.
+Este trabajo demuestra que:
 
-Para regenerar modelos en el proyecto original:
+* La simulación puede integrarse con modelamiento realista
+* Los modelos estadísticos clásicos siguen siendo altamente efectivos
+* La evaluación sin reentrenamiento es clave para validar modelos
+* La trazabilidad metodológica es tan importante como el resultado
+
+---
+
+## ⚠️ Qué debes tener en cuenta
+
+* Los datos son **simulados**, no reales
+* Los resultados dependen de supuestos del modelo generador
+* La clasificación tiene limitaciones (recall bajo)
+* No es un sistema listo para producción sin ajustes adicionales
+
+---
+
+## ▶️ Cómo ejecutar
+
+### Entrenar modelos
 
 ```bash
 python src/run_premodeling_modeling_.py
 ```
 
-Para evaluar modelos guardados sobre datos nuevos:
+### Evaluar modelos guardados
 
 ```bash
 python src/run_evaluate_saved_models.py
@@ -179,10 +169,25 @@ python src/run_evaluate_saved_models.py
 
 ---
 
-## Referencias bibliográficas base
+## 📚 Referencias base
 
-- James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). *An Introduction to Statistical Learning*.
-- McCullagh, P., & Nelder, J. A. (1989). *Generalized Linear Models*.
-- Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning*.
-- Microsoft. Azure Blob Storage Documentation.
-- Rubinstein, R. Y., & Kroese, D. P. (2016). *Simulation and the Monte Carlo Method*.
+* *An Introduction to Statistical Learning* – James et al.
+* *Generalized Linear Models* – McCullagh & Nelder
+* *The Elements of Statistical Learning* – Hastie et al.
+* *Simulation and the Monte Carlo Method* – Rubinstein
+* Azure Blob Storage Documentation
+
+---
+
+## 🧭 Siguiente paso recomendado
+
+Si es tu primera vez en el proyecto:
+
+👉 Empieza por:
+**[Contexto del problema](docs/01_contexto_problema.md)**
+
+Luego sigue el flujo completo para entender la lógica metodológica.
+
+---
+
+Este README actúa como **mapa del proyecto**: úsalo para orientarte antes de entrar en el detalle técnico o estadístico.

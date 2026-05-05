@@ -1,27 +1,87 @@
----
 🏠 [Inicio](../README.md)
-
 ⬅️ [Anterior](01_contexto_problema.md)
-
 ➡️ [Siguiente](02_01_rmarco_teorico_blobstorage.md)
 
 ---
 
 # 2. Procedencia y fuente de la base de datos
 
-Se emplea un enfoque de **simulación controlada** debido a restricciones de acceso a datos reales completos en entornos productivos. Este enfoque permite construir un entorno experimental reproducible donde las condiciones del sistema pueden ser parametrizadas y evaluadas de forma sistemática.
+## 2.1 Enfoque general: simulación como fuente de datos
 
-La base de datos se genera mediante un **modelo generativo estructurado**, diseñado para replicar el comportamiento de un sistema de almacenamiento de objetos a nivel de archivo, incorporando:
+Debido a las limitaciones de acceso a datos reales completos en entornos productivos de almacenamiento distribuido, este trabajo adopta un enfoque de **simulación controlada**, el cual permite construir un entorno experimental reproducible donde las condiciones del sistema pueden ser parametrizadas, modificadas y evaluadas de manera sistemática.
 
-- características del dato (tamaño, tipo)
-- ciclo de vida (tiempo, acceso)
-- condiciones operativas (transferencia)
-- variables de error
-- estructuras de contenido (hash parcial)
+A diferencia de datasets observacionales, este enfoque permite:
+
+* controlar las distribuciones de las variables
+* aislar efectos específicos
+* generar múltiples escenarios experimentales
+* validar hipótesis bajo condiciones reproducibles
 
 ---
 
-## 2.1 Generación del universo de contenidos
+## 2.2 Repositorio de simulación y trazabilidad del proceso
+
+La generación de datos se implementa mediante un repositorio de simulación desarrollado específicamente para este proyecto:
+
+🔗 **Repositorio:**
+https://github.com/viejoedwinsierra/mvp_thesis_simulator
+
+Este repositorio constituye el núcleo del proceso generativo y permite:
+
+* definir parámetros de simulación configurables
+* ejecutar múltiples corridas del experimento
+* generar datasets independientes bajo distintas condiciones
+* soportar diferentes casos de uso analítico
+
+Desde una perspectiva metodológica, este repositorio actúa como un **generador de datos basado en Monte Carlo**, donde cada ejecución produce una realización del sistema bajo un conjunto de parámetros definidos.
+
+---
+
+## 2.3 Simulación Monte Carlo y generación de escenarios
+
+El simulador implementa un esquema de **simulación Monte Carlo**, en el cual:
+
+* las variables de entrada se definen mediante distribuciones probabilísticas
+* se generan múltiples observaciones independientes
+* se construyen datasets sintéticos replicables
+
+Formalmente, cada ejecución del simulador produce un dataset:
+
+$$
+\mathcal{D}^{(k)} = {u_i^{(k)}}_{i=1}^{N}
+$$
+
+donde:
+
+* (k) representa una corrida de simulación
+* (N) es el número de archivos generados
+* cada (u_i) es una instancia del sistema
+
+Esto permite no solo analizar un dataset, sino estudiar la **variabilidad entre datasets**, fortaleciendo el análisis de generalización.
+
+---
+
+## 2.4 Parametrización del sistema
+
+El repositorio permite configurar dinámicamente parámetros como:
+
+* número de archivos generados
+* distribución del tamaño (`LogNormal`)
+* distribución del tiempo (`Uniforme`, `Exponencial`)
+* probabilidades de error
+* proporciones de tipos de archivo
+* niveles de almacenamiento
+
+Esto convierte el simulador en un **entorno de experimentación controlada**, donde se pueden probar distintos escenarios:
+
+* alta tasa de errores
+* crecimiento acelerado de datos
+* cambios en patrones de acceso
+* variaciones en distribución de tamaños
+
+---
+
+## 2.5 Generación del universo de contenidos
 
 Se define un conjunto inicial de archivos:
 
@@ -29,12 +89,12 @@ $$
 N = 10{,}000
 $$
 
-Cada archivo representa una unidad observable del sistema y se caracteriza por:
+Cada archivo representa una unidad observable del sistema y se caracteriza por variables como:
 
-* `file_id`: identificador único  
-* `file_type`: tipo de archivo (json, jpg, pdf, mp4)  
-* `size_gb`: tamaño del archivo  
-* `creation_timestamp`: instante de creación  
+* `file_id`
+* `file_type`
+* `size_gb`
+* `creation_timestamp`
 
 El tamaño se modela como:
 
@@ -42,170 +102,125 @@ $$
 size_{gb} \sim \text{LogNormal}(\mu, \sigma)
 $$
 
-Esta distribución captura:
+lo cual captura la naturaleza realista de sistemas de almacenamiento:
 
-- alta concentración de archivos pequeños  
-- presencia de archivos grandes (cola larga)  
-
----
-
-## 2.2 Generación de tipos de archivo
-
-El tipo de archivo se modela como variable categórica:
-
-$$
-file_{type} \sim \text{Categorical}(p_{json}, p_{jpg}, p_{pdf}, p_{mp4})
-$$
-
-Esto permite capturar:
-
-- variabilidad estructural del sistema  
-- diferentes patrones de tamaño  
-- impacto diferencial en almacenamiento  
+* alta frecuencia de archivos pequeños
+* presencia de archivos grandes (cola pesada)
 
 ---
 
-## 2.3 Generación de ciclo de vida del dato
+## 2.6 Generación de variables estructurales
 
-Se modela el tiempo de almacenamiento como:
+Las variables principales se generan como:
+
+$$
+file_{type} \sim \text{Categorical}
+$$
 
 $$
 days_{stored} \sim F_t
 $$
 
-donde $F_t$ puede ser uniforme o exponencial.
-
-Adicionalmente:
-
 $$
-days_{since\_last\_access} \sim \text{Uniform}(0, days_{stored})
+storage_{tier} \sim \text{Categorical}
 $$
 
-Esto permite representar:
+Estas variables representan:
 
-- archivos activos  
-- archivos fríos  
-- comportamiento de acceso  
+* estructura del sistema
+* comportamiento del ciclo de vida
+* estrategia de almacenamiento
 
 ---
 
-## 2.4 Asignación de nivel de almacenamiento
+## 2.7 Variables operativas y dependencias
 
-El nivel de almacenamiento se modela como:
-
-$$
-storage_{tier} \sim \text{Categorical}(\text{hot}, \text{cool}, \text{archive})
-$$
-
-Esta variable determina:
-
-- costo unitario  
-- comportamiento del sistema  
-- eficiencia del almacenamiento  
-
----
-
-## 2.5 Generación de variables operativas
-
-Se modela la transferencia como:
-
-$$
-transfer_{duration} \sim F_d
-$$
-
-y la velocidad como variable derivada:
+El simulador introduce dependencias estructurales:
 
 $$
 transfer_{speed} = \frac{size_{gb}}{transfer_{duration}}
 $$
 
-Esto introduce:
+lo cual permite:
 
-- dependencia estructural entre variables  
-- análisis de eficiencia  
+* modelar eficiencia
+* capturar relaciones funcionales
+* evitar independencia artificial entre variables
 
 ---
 
-## 2.6 Generación de errores
+## 2.8 Generación de errores
 
-Los errores se modelan como variables binarias independientes:
+Los errores se modelan como:
 
 $$
 error_i \sim \text{Bernoulli}(p_i)
 $$
 
-donde:
+incluyendo:
 
-- $error_{duplicado}$  
-- $error_{orphan}$  
-- $error_{null}$  
-- $error_{blob}$  
+* errores de duplicidad
+* errores de integridad
+* errores de transferencia
 
-Esto permite capturar:
-
-- condiciones de falla  
-- calidad del sistema  
-- veracidad del dato  
+Esto permite estudiar la calidad del sistema bajo distintas condiciones.
 
 ---
 
-## 2.7 Representación parcial del contenido (hash)
+## 2.9 Representación de contenido mediante hash parcial
 
-Para evitar el costo computacional del procesamiento completo del contenido, se utilizan segmentos parciales:
-
-$$
-hash\_head = H(content)[0:k]
-$$
+Para optimizar el costo computacional, el simulador utiliza:
 
 $$
-hash\_tail = H(content)[-k:]
+hash_{head}, \quad hash_{tail}
 $$
 
-Estas variables funcionan como:
+como aproximaciones del contenido.
 
-- proxy probabilístico de persistencia  
-- indicador de recurrencia del contenido  
-- aproximación a la detección de duplicados  
+Este enfoque permite:
 
-⚠️ Este enfoque reduce costo computacional pero introduce incertidumbre en la detección exacta.
+* estimar duplicidad
+* identificar recurrencia
+* reducir complejidad computacional
+
+aunque introduce incertidumbre en la identificación exacta.
 
 ---
 
-## 2.8 Construcción del dataset maestro
+## 2.10 Construcción del dataset maestro
 
-Se define el dataset como:
+Cada ejecución del simulador genera un dataset:
 
 $$
-\mathcal{D} = \{u_i\}_{i=1}^{N}
+\mathcal{D} = {u_i}_{i=1}^{N}
 $$
 
-donde cada instancia $u_i$ contiene:
+donde cada instancia contiene:
 
-- variables de tamaño  
-- variables de tipo  
-- variables temporales  
-- variables operativas  
-- variables de error  
-- variables de contenido (hash parcial)  
+* variables estructurales
+* variables temporales
+* variables operativas
+* variables de error
+* proxies de contenido
 
-Este dataset se utiliza para:
+Este dataset es utilizado para:
 
-- análisis exploratorio (EDA)  
-- modelamiento estadístico  
-- entrenamiento de modelos de machine learning  
+* análisis exploratorio
+* modelamiento estadístico
+* validación de hipótesis
 
 ---
 
-## 2.9 Relación con el modelo probabilístico
+## 2.11 Relación con el modelo probabilístico
 
 El sistema se modela como:
 
 $$
-X = \{ size_{gb}, file_{type}, days_{stored}, storage_{tier}, error \}
+X = { size_{gb}, file_{type}, days_{stored}, storage_{tier}, error }
 $$
 
 $$
-Y = \{ storage_{cost}, has_{error}, is_{duplicate} \}
+Y = { storage_{cost}, transfer_duration, has_error }
 $$
 
 y el objetivo es estimar:
@@ -214,29 +229,47 @@ $$
 P(Y \mid X)
 $$
 
----
-
-## 2.10 Alcance analítico
-
-El entorno permite analizar:
-
-- distribución de tamaños  
-- comportamiento del ciclo de vida  
-- impacto de errores  
-- patrones de duplicidad  
-- relaciones entre variables  
+El simulador permite generar múltiples realizaciones de (X), lo cual fortalece la estimación de esta relación.
 
 ---
 
-## 2.11 Limitaciones del enfoque
+## 2.12 Rol del simulador en la validación de hipótesis
 
-El modelo presenta las siguientes limitaciones:
+El repositorio no solo genera datos, sino que habilita:
 
-- uso de simulación en lugar de datos reales  
-- simplificación de dependencias complejas  
-- exclusión de optimizaciones internas (compresión, deduplicación física)  
-- uso de hash parcial en lugar de hash completo ⚠️  
+* validación de hipótesis bajo distintos escenarios
+* análisis de sensibilidad
+* evaluación de estabilidad de modelos
 
-Por lo tanto, los resultados deben interpretarse como aproximaciones controladas.
+Esto lo convierte en una herramienta clave para:
+
+* verificar consistencia de resultados
+* analizar robustez del modelamiento
+* estudiar generalización
+
+---
+
+## 2.13 Limitaciones del enfoque
+
+A pesar de sus ventajas, el enfoque presenta limitaciones:
+
+* dependencia de supuestos de simulación
+* simplificación de dependencias reales
+* ausencia de fenómenos no modelados (ej. latencias de red complejas)
+* uso de hash parcial
+
+Por lo tanto, los resultados deben interpretarse como **aproximaciones controladas**, no como representaciones exactas de sistemas reales.
+
+
+---
+
+## 2.15 Referencias
+
+* Ross, S. (2014). *Introduction to Probability Models*.
+* Rubinstein, R., & Kroese, D. (2016). *Simulation and the Monte Carlo Method*.
+* Casella, G., & Berger, R. (2002). *Statistical Inference*.
+* Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning*.
+* Kleppmann, M. (2017). *Designing Data-Intensive Applications*.
+* Repositorio de simulación: https://github.com/viejoedwinsierra/mvp_thesis_simulator
 
 ---

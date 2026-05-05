@@ -1,0 +1,1 @@
+aca se genera la paret avanzada de analis multivariado del datset
