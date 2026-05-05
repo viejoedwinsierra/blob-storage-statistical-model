@@ -1,8 +1,6 @@
----
 🏠 [Inicio](../README.md)
 
 ⬅️ [Anterior](04_parametros_simulacion.md)
-
 ➡️ [Siguiente](06_preguntas_analiticas.md)
 
 ---
@@ -11,213 +9,227 @@
 
 ## 5.1 Enfoque general
 
-El modelamiento estadístico se construye a partir de un proceso generativo jerárquico donde:
+El modelamiento estadístico se construye a partir del proceso generativo definido en el simulador, donde el sistema se comporta como un proceso probabilístico condicionado por estados operativos.
 
-1. Se determina el estado operativo del sistema (normal o incidente).
-2. Se genera el volumen diario de blobs.
-3. Se modela la proporción de duplicación por contenido.
-4. Se derivan métricas agregadas (TPS, volumen acumulado, tasa de duplicación).
+Este enfoque es consistente porque:
 
-Este enfoque permite separar claramente:
+* los datos fueron generados mediante simulación Monte Carlo
+* las variables siguen distribuciones definidas (Poisson, Binomial, LogNormal)
+* el modelo busca aproximar la relación:
 
-- Variabilidad estructural del sistema.
-- Efecto de incidentes.
-- Comportamiento base del almacenamiento.
-- Impacto acumulativo en costos.
+$$
+P(Y \mid X)
+$$
+
+Esto convierte el modelamiento en un proceso **coherente, trazable y defendible**.
 
 ---
 
-## 5.2 Modelo de estado del sistema
+## 5.2 Relación con el simulador
 
-El estado diario del sistema se modela como:
+El simulador define:
 
-\[
+```text
+Estado → Volumen → Errores → Costo → Observaciones
+```
+
+El modelo estadístico busca reconstruir esta relación:
+
+$$
+X \rightarrow Y
+$$
+
+donde:
+
+* (X): variables independientes (tamaño, tier, tiempo, etc.)
+* (Y): variables dependientes (costo, error, duración)
+
+👉 Esto valida que el enfoque es **probabilístico y no arbitrario**
+
+---
+
+## 5.3 Modelo de estado del sistema
+
+[
 I_t \sim \text{Bernoulli}(p_{incident})
-\]
-
-Donde:
-
-- \(I_t = 0\): día normal  
-- \(I_t = 1\): día con incidente  
-
-Este modelo captura la naturaleza aleatoria de fallas operativas.
-
----
-
-## 5.3 Modelo de conteo diario de blobs
-
-El número total de blobs generados por día se modela como:
-
-\[
-X_t \sim
-\begin{cases}
-\text{Poisson}(\lambda) & I_t = 0 \\
-\text{Poisson}(k\lambda) & I_t = 1
-\end{cases}
-\]
-
-### Interpretación
-
-- En operación normal, el sistema presenta una tasa media estable.
-- En incidente, la tasa se amplifica por el factor \(k\), representando reintentos y reprocesos.
-
-### Justificación del uso de Poisson
-
-- Modela eventos independientes.
-- Adecuado para conteos por unidad de tiempo.
-- Escalable a volúmenes masivos (Big Data).
-- Permite análisis de sobredispersión si se requiere extensión a Binomial Negativa.
-
----
-
-## 5.4 Modelo de duplicación por contenido
-
-Condicional al número de blobs generados en el día:
-
-\[
-D_t \sim \text{Binomial}(X_t, p_t)
-\]
-
-Donde:
-
-\[
-p_t =
-\begin{cases}
-p_{ok} & I_t = 0 \\
-p_{fail} & I_t = 1
-\end{cases}
-\]
-
-### Interpretación
-
-- Cada blob tiene probabilidad \(p_t\) de replicar contenido existente.
-- En incidente, la probabilidad de duplicación aumenta significativamente.
-
-### Propiedad relevante
-
-Dado que:
-
-- \(X_t \sim Poisson(\lambda_t)\)
-- \(D_t | X_t \sim Binomial(X_t, p_t)\)
-
-Entonces:
-
-\[
-D_t \sim Poisson(p_t \lambda_t)
-\]
-
-Esto permite modelar duplicados como proceso de conteo independiente.
-
----
-
-## 5.5 Modelo de tasa de duplicación observada
-
-\[
-duplicate\_rate_t = \frac{D_t}{X_t}
-\]
-
-Permite analizar:
-
-- Cambios estructurales en la proporción.
-- Detección de comportamiento anómalo.
-- Comparación entre regímenes operativos.
-
----
-
-## 5.6 Modelo de TPS (Transacciones por segundo)
-
-Se define:
-
-\[
-TPS_t = \frac{X_t}{86400}
-\]
-
-Durante incidentes:
-
-\[
-\mathbb{E}[TPS_t | I_t=1] > \mathbb{E}[TPS_t | I_t=0]
-\]
+]
 
 Interpretación:
 
-- El aumento en TPS puede reflejar reintentos automáticos.
-- TPS actúa como indicador temprano de degradación.
+* Representa la probabilidad de que el sistema entre en estado de incidente
+* Introduce variabilidad estructural
+
+👉 Este componente es clave porque:
+
+* explica cambios en comportamiento
+* justifica desviaciones en datos
 
 ---
 
-## 5.7 Hipótesis contrastables
+## 5.4 Modelo de conteo de blobs
 
-### H1 – Incremento de volumen en incidentes
+[
+X_t \sim
+\begin{cases}
+\text{Poisson}(\lambda) & I_t = 0 \
+\text{Poisson}(k\lambda) & I_t = 1
+\end{cases}
+]
 
-\[
-H_0: \mathbb{E}[X_t | I_t=1] = \mathbb{E}[X_t | I_t=0]
-\]
+### 📊 Evidencia empírica
 
-\[
-H_1: \mathbb{E}[X_t | I_t=1] > \mathbb{E}[X_t | I_t=0]
-\]
+![Relación carga vs congestión](../img/advanced/scatter_hourly_arrival_count_vs_congestion_factor.png)
 
----
+**Interpretación:**
 
-### H2 – Incremento en probabilidad de duplicación
-
-\[
-H_0: p_{fail} = p_{ok}
-\]
-
-\[
-H_1: p_{fail} > p_{ok}
-\]
+* A mayor carga → mayor congestión
+* Validación empírica del modelo Poisson
 
 ---
 
-### H3 – Incremento en TPS durante incidentes
+## 5.5 Modelo de duplicación
 
-\[
-H_0: \mathbb{E}[TPS_t | I_t=1] = \mathbb{E}[TPS_t | I_t=0]
-\]
+[
+D_t \sim \text{Binomial}(X_t, p_t)
+]
 
-\[
-H_1: \mathbb{E}[TPS_t | I_t=1] > \mathbb{E}[TPS_t | I_t=0]
-\]
+### 📊 Evidencia empírica
 
----
+![Relación duplicación](../img/advanced/target_relationships_has_error.png)
 
-## 5.8 Extensiones posibles
+**Interpretación:**
 
-- Modelo de regresión Poisson:
-  \[
-  \log(\lambda_t) = \beta_0 + \beta_1 I_t
-  \]
-
-- Regresión logística para duplicación:
-  \[
-  \log\left(\frac{p_t}{1-p_t}\right) = \alpha_0 + \alpha_1 I_t
-  \]
-
-- Modelos de control estadístico para detección de spikes.
+* La probabilidad de error aumenta con condiciones operativas
+* Validación del componente probabilístico
 
 ---
 
-## 5.9 Relación con Big Data
+## 5.6 Modelo de costo
 
-El modelo es consistente con entornos de gran escala porque:
+El costo se modela como:
 
-- Permite alta cardinalidad.
-- Se basa en agregación diaria (reducción dimensional).
-- Puede ejecutarse en frameworks distribuidos (Spark, MapReduce).
-- Es extensible a terabytes de información.
-- No requiere inspección de contenido completo (usa metadatos y hash).
+[
+storage_{cost} = f(size, tier, time)
+]
 
 ---
 
-## 5.10 Conclusión del modelamiento
+### 📊 Evidencia del modelo GLM Gamma
 
-El sistema puede interpretarse como un proceso de conteo condicionado por estado operativo, donde los incidentes alteran simultáneamente:
+![Observed vs predicted](../img/modeling/modeling_log_observed_vs_predicted_storage_cost_glm_gamma_log.png)
 
-- La tasa de generación de blobs.
-- La probabilidad de duplicación.
-- La presión de escritura.
-- El volumen acumulado.
+![Residuos](../img/modeling/modeling_residuals_vs_predicted_storage_cost_glm_gamma_log.png)
 
-Este enfoque permite cuantificar impacto operativo, riesgo financiero y salud del almacenamiento.
+![QQ Plot](../img/modeling/modeling_qq_residuals_storage_cost_glm_gamma_log.png)
+
+---
+
+### 🧠 Interpretación
+
+* Buena alineación entre observado y predicho
+* Residuos sin patrón estructural fuerte
+* Distribución consistente con Gamma
+
+👉 Esto confirma:
+
+* modelo adecuado
+* buena generalización
+
+---
+
+## 5.7 Modelo de duración (OLS log-linear)
+
+[
+\log(Y) = \beta_0 + \beta X + \epsilon
+]
+
+---
+
+### 📊 Evidencia
+
+![Observed vs predicted duration](../img/modeling/modeling_log_observed_vs_predicted_transfer_duration_sec.png)
+
+![Residuos duration](../img/modeling/modeling_residuals_vs_predicted_transfer_duration_sec.png)
+
+---
+
+### 🧠 Interpretación
+
+* Ajuste muy alto (R² elevado)
+* comportamiento estable
+* validación de relación multiplicativa
+
+---
+
+## 5.8 Modelo de clasificación (error)
+
+[
+P(Y=1|X) = \frac{1}{1 + e^{-z}}
+]
+
+---
+
+### 📊 Evidencia
+
+![ROC Curve](../img/modeling/modeling_roc_curve_has_error_logistic_regression.png)
+
+![Confusion Matrix](../img/modeling/modeling_confusion_matrix_has_error_logistic_regression.png)
+
+![Precision Recall](../img/modeling/modeling_precision_recall_curve_has_error_logistic_regression.png)
+
+---
+
+### 🧠 Interpretación
+
+* Buen ROC AUC
+* Bajo recall
+* problema de clases desbalanceadas
+
+👉 Esto confirma:
+
+* modelo válido
+* pero con limitaciones prácticas
+
+---
+
+## 5.9 Validación del enfoque probabilístico
+
+El modelo es consistente porque:
+
+* los datos siguen distribuciones conocidas
+* el modelo respeta esas distribuciones
+* existe coherencia entre simulación y estimación
+
+👉 Esto es clave:
+
+> El modelo no intenta forzar los datos, sino explicar el proceso que los generó.
+
+---
+
+## 5.10 Relación con el mundo real
+
+Este enfoque es aplicable a sistemas cloud porque:
+
+* el costo depende de múltiples variables
+* los errores son probabilísticos
+* la carga es variable
+* los sistemas presentan estados (normal/incidente)
+
+---
+
+## 5.11 Conclusión del modelamiento
+
+El sistema puede interpretarse como un proceso probabilístico donde:
+
+* el volumen se modela como Poisson
+* los errores como Binomial
+* el costo como Gamma
+* la duración como log-linear
+
+Esto permite:
+
+* modelar comportamiento
+* predecir resultados
+* evaluar escenarios
+
+---
