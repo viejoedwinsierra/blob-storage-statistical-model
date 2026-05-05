@@ -1,0 +1,858 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Reporte de evaluación de modelos - Blob Storage Monte Carlo</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 32px;
+                color: #2c3e50;
+                background: #f8f9fa;
+            }
+
+            h1 {
+                margin-bottom: 6px;
+                color: #1f3a56;
+            }
+
+            h2 {
+                color: #1f3a56;
+                margin-top: 0;
+                border-bottom: 2px solid #e8eef3;
+                padding-bottom: 8px;
+            }
+
+            h3 {
+                margin-top: 0;
+                color: #2c3e50;
+                font-size: 15px;
+            }
+
+            .subtitle {
+                color: #666;
+                margin-bottom: 24px;
+            }
+
+            .card {
+                background: white;
+                padding: 20px;
+                margin-bottom: 24px;
+                border-radius: 10px;
+                box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+            }
+
+            .note {
+                background: #eef6ff;
+                border-left: 5px solid #2c7be5;
+                padding: 14px;
+                border-radius: 6px;
+                margin-bottom: 24px;
+                font-size: 14px;
+            }
+
+            .summary-card {
+                border-left: 5px solid #198754;
+            }
+
+            .section-desc {
+                color: #555;
+                font-size: 14px;
+                margin-top: -4px;
+                margin-bottom: 14px;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                font-size: 13px;
+            }
+
+            th {
+                background-color: #2c3e50;
+                color: white;
+                padding: 8px;
+                text-align: left;
+                white-space: nowrap;
+            }
+
+            td {
+                border: 1px solid #ddd;
+                padding: 7px;
+                white-space: nowrap;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 20px;
+            }
+
+            .plot-card {
+                background: #ffffff;
+                padding: 16px;
+                border-radius: 8px;
+                border: 1px solid #e4e4e4;
+            }
+
+            img {
+                max-width: 100%;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background: white;
+            }
+
+            @media (max-width: 900px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Reporte de evaluación de modelos - Blob Storage Monte Carlo</h1>
+        <p class="subtitle">
+            Fase de evaluación de modelos entrenados sobre datos nuevos.
+        </p>
+
+        <div class="note">
+            Este reporte evalúa modelos previamente entrenados. No entrena de nuevo.
+        </div>
+
+        
+        <section class='card'>
+            <h2>Objetivo del reporte de evaluación</h2>
+            <p>
+                Este reporte evalúa modelos estadísticos previamente entrenados
+                sobre un dataset nuevo o regenerado. A diferencia del reporte de
+                modelamiento, esta fase no reentrena; solo mide desempeño.
+            </p>
+            <p>
+                Su objetivo es validar generalización, estabilidad, degradación de
+                métricas y utilidad del modelo sobre escenarios no usados durante
+                el entrenamiento.
+            </p>
+        </section>
+        
+        <section class='card summary-card'>
+            <h2>Resumen ejecutivo de evaluación</h2>
+            <p>
+                Se evaluaron <strong>5</strong> modelos guardados sobre
+                el dataset actual, usando umbral de clasificación
+                <strong>0.5</strong>.
+            </p>
+            <p>
+                Modelos evaluados correctamente: <strong>5</strong>.
+                Modelos con error: <strong>0</strong>.
+            </p>
+            <p>
+                La evaluación se realizó usando modelos persistidos desde:
+                <code>output\models\statistical</code>.
+            </p>
+            <ul><li><strong>OK</strong>: 3</li><li><strong>REENTRENAR_O_REVISAR</strong>: 1</li><li><strong>MONITOREAR</strong>: 1</li></ul>
+        </section>
+        
+    <section class="card ">
+        <h2>1. Estado y recomendación por modelo</h2>
+        
+        <div class="table-container">
+            <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>target</th>
+      <th>model_type</th>
+      <th>status</th>
+      <th>recommendation</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>ols_log_linear</td>
+      <td>ok</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>glm_gamma_log</td>
+      <td>ok</td>
+      <td>REENTRENAR_O_REVISAR</td>
+      <td>R2 bajo en evaluación. | Error aumentó: delta_mae=0.0014</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>ols_log_linear</td>
+      <td>ok</td>
+      <td>MONITOREAR</td>
+      <td>R2 moderado en evaluación.</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>glm_gamma_log</td>
+      <td>ok</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>logistic_regression</td>
+      <td>ok</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </section>
+    
+    <section class="card ">
+        <h2>2. Comparación de métricas de evaluación</h2>
+        
+        <div class="table-container">
+            <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>target</th>
+      <th>model_type</th>
+      <th>status</th>
+      <th>problem_type</th>
+      <th>n_rows_evaluated</th>
+      <th>mae</th>
+      <th>rmse</th>
+      <th>r2</th>
+      <th>accuracy</th>
+      <th>precision</th>
+      <th>recall</th>
+      <th>f1</th>
+      <th>roc_auc</th>
+      <th>average_precision</th>
+      <th>delta_mae</th>
+      <th>delta_rmse</th>
+      <th>delta_r2</th>
+      <th>delta_accuracy</th>
+      <th>delta_f1</th>
+      <th>delta_roc_auc</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>ols_log_linear</td>
+      <td>ok</td>
+      <td>regression_positive</td>
+      <td>333904</td>
+      <td>0.3001</td>
+      <td>0.3824</td>
+      <td>0.9581</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>-0.0011</td>
+      <td>-0.002</td>
+      <td>0.0002</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>glm_gamma_log</td>
+      <td>ok</td>
+      <td>regression_positive</td>
+      <td>333904</td>
+      <td>0.5889</td>
+      <td>1.3164</td>
+      <td>0.5036</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0.0014</td>
+      <td>-0.0153</td>
+      <td>0.0085</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>ols_log_linear</td>
+      <td>ok</td>
+      <td>regression_positive</td>
+      <td>333904</td>
+      <td>0.0012</td>
+      <td>0.0026</td>
+      <td>0.6572</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>-0.0</td>
+      <td>-0.0</td>
+      <td>-0.0005</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>glm_gamma_log</td>
+      <td>ok</td>
+      <td>regression_positive</td>
+      <td>333904</td>
+      <td>0.0003</td>
+      <td>0.0012</td>
+      <td>0.9246</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>-0.0</td>
+      <td>-0.0</td>
+      <td>-0.0002</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>logistic_regression</td>
+      <td>ok</td>
+      <td>classification_binary</td>
+      <td>333904</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0.8448</td>
+      <td>0.616</td>
+      <td>0.2279</td>
+      <td>0.3327</td>
+      <td>0.813</td>
+      <td>0.476</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>-0.0006</td>
+      <td>0.0045</td>
+      <td>-0.0026</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </section>
+    
+    <section class="card ">
+        <h2>3. Métricas completas de evaluación sobre datos nuevos</h2>
+        
+        <div class="table-container">
+            <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>target</th>
+      <th>model_type</th>
+      <th>model_path</th>
+      <th>status</th>
+      <th>n_rows_evaluated</th>
+      <th>n_features_evaluated</th>
+      <th>problem_type</th>
+      <th>mae</th>
+      <th>rmse</th>
+      <th>median_ae</th>
+      <th>r2</th>
+      <th>explained_variance</th>
+      <th>mape</th>
+      <th>residual_mean</th>
+      <th>residual_std</th>
+      <th>residual_median</th>
+      <th>abs_error_p50</th>
+      <th>abs_error_p90</th>
+      <th>abs_error_p95</th>
+      <th>abs_error_max</th>
+      <th>delta_mae</th>
+      <th>delta_rmse</th>
+      <th>delta_r2</th>
+      <th>threshold</th>
+      <th>accuracy</th>
+      <th>balanced_accuracy</th>
+      <th>precision</th>
+      <th>recall</th>
+      <th>f1</th>
+      <th>positive_rate_observed</th>
+      <th>positive_rate_predicted</th>
+      <th>probability_mean</th>
+      <th>probability_p50</th>
+      <th>probability_p90</th>
+      <th>tn</th>
+      <th>fp</th>
+      <th>fn</th>
+      <th>tp</th>
+      <th>roc_auc</th>
+      <th>average_precision</th>
+      <th>log_loss</th>
+      <th>delta_accuracy</th>
+      <th>delta_f1</th>
+      <th>delta_roc_auc</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>ols_log_linear</td>
+      <td>output\models\statistical\transfer_duration_sec\transfer_duration_sec__ols_log_linear.pkl</td>
+      <td>ok</td>
+      <td>333904</td>
+      <td>23</td>
+      <td>regression_positive</td>
+      <td>0.3001</td>
+      <td>0.3824</td>
+      <td>0.2461</td>
+      <td>0.9581</td>
+      <td>0.9581</td>
+      <td>0.2955</td>
+      <td>-0.0115</td>
+      <td>0.3823</td>
+      <td>-0.0352</td>
+      <td>0.2461</td>
+      <td>0.6334</td>
+      <td>0.7662</td>
+      <td>2.2541</td>
+      <td>-0.0011</td>
+      <td>-0.002</td>
+      <td>0.0002</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>glm_gamma_log</td>
+      <td>output\models\statistical\transfer_duration_sec\transfer_duration_sec__glm_gamma_log.pkl</td>
+      <td>ok</td>
+      <td>333904</td>
+      <td>23</td>
+      <td>regression_positive</td>
+      <td>0.5889</td>
+      <td>1.3164</td>
+      <td>0.2493</td>
+      <td>0.5036</td>
+      <td>0.5164</td>
+      <td>0.2348</td>
+      <td>-0.212</td>
+      <td>1.2993</td>
+      <td>-0.01</td>
+      <td>0.2493</td>
+      <td>1.1031</td>
+      <td>2.3415</td>
+      <td>23.4478</td>
+      <td>0.0014</td>
+      <td>-0.0153</td>
+      <td>0.0085</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>ols_log_linear</td>
+      <td>output\models\statistical\storage_cost\storage_cost__ols_log_linear.pkl</td>
+      <td>ok</td>
+      <td>333904</td>
+      <td>11</td>
+      <td>regression_positive</td>
+      <td>0.0012</td>
+      <td>0.0026</td>
+      <td>0.0007</td>
+      <td>0.6572</td>
+      <td>0.6572</td>
+      <td>34.7572</td>
+      <td>0.0</td>
+      <td>0.0026</td>
+      <td>0.0001</td>
+      <td>0.0007</td>
+      <td>0.0022</td>
+      <td>0.0037</td>
+      <td>0.0839</td>
+      <td>-0.0</td>
+      <td>-0.0</td>
+      <td>-0.0005</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>glm_gamma_log</td>
+      <td>output\models\statistical\storage_cost\storage_cost__glm_gamma_log.pkl</td>
+      <td>ok</td>
+      <td>333904</td>
+      <td>11</td>
+      <td>regression_positive</td>
+      <td>0.0003</td>
+      <td>0.0012</td>
+      <td>0.0</td>
+      <td>0.9246</td>
+      <td>0.9247</td>
+      <td>0.4471</td>
+      <td>-0.0001</td>
+      <td>0.0012</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0006</td>
+      <td>0.0016</td>
+      <td>0.048</td>
+      <td>-0.0</td>
+      <td>-0.0</td>
+      <td>-0.0002</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>logistic_regression</td>
+      <td>output\models\statistical\has_error\has_error__logistic_regression.pkl</td>
+      <td>ok</td>
+      <td>333904</td>
+      <td>23</td>
+      <td>classification_binary</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0.5</td>
+      <td>0.8448</td>
+      <td>0.5994</td>
+      <td>0.616</td>
+      <td>0.2279</td>
+      <td>0.3327</td>
+      <td>0.1698</td>
+      <td>0.0628</td>
+      <td>0.1716</td>
+      <td>0.0902</td>
+      <td>0.4232</td>
+      <td>269167.0</td>
+      <td>8055.0</td>
+      <td>43762.0</td>
+      <td>12920.0</td>
+      <td>0.813</td>
+      <td>0.476</td>
+      <td>0.3599</td>
+      <td>-0.0006</td>
+      <td>0.0045</td>
+      <td>-0.0026</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </section>
+    
+    <section class="card">
+        <h2>4. Gráficos estadísticos de evaluación</h2>
+        <p class="section-desc">
+            Incluye observado vs estimado, residuos, error absoluto, matrices de confusión, curvas ROC, Precision-Recall, calibración y distribuciones de probabilidad.
+        </p>
+        <div class="grid">
+    
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Boxplot Storage Cost Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_boxplot_storage_cost_glm_gamma_log.png" alt="Evaluation Absolute Error Boxplot Storage Cost Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Boxplot Storage Cost Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_boxplot_storage_cost_ols_log_linear.png" alt="Evaluation Absolute Error Boxplot Storage Cost Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Boxplot Transfer Duration Sec Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_boxplot_transfer_duration_sec_glm_gamma_log.png" alt="Evaluation Absolute Error Boxplot Transfer Duration Sec Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Boxplot Transfer Duration Sec Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_boxplot_transfer_duration_sec_ols_log_linear.png" alt="Evaluation Absolute Error Boxplot Transfer Duration Sec Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Vs Predicted Storage Cost Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_vs_predicted_storage_cost_glm_gamma_log.png" alt="Evaluation Absolute Error Vs Predicted Storage Cost Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Vs Predicted Storage Cost Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_vs_predicted_storage_cost_ols_log_linear.png" alt="Evaluation Absolute Error Vs Predicted Storage Cost Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Vs Predicted Transfer Duration Sec Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_vs_predicted_transfer_duration_sec_glm_gamma_log.png" alt="Evaluation Absolute Error Vs Predicted Transfer Duration Sec Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Absolute Error Vs Predicted Transfer Duration Sec Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_absolute_error_vs_predicted_transfer_duration_sec_ols_log_linear.png" alt="Evaluation Absolute Error Vs Predicted Transfer Duration Sec Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Calibration Curve Has Error Logistic Regression</h3>
+            <img src="../plots/model_evaluation/evaluation_calibration_curve_has_error_logistic_regression.png" alt="Evaluation Calibration Curve Has Error Logistic Regression">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Confusion Matrix Has Error Logistic Regression</h3>
+            <img src="../plots/model_evaluation/evaluation_confusion_matrix_has_error_logistic_regression.png" alt="Evaluation Confusion Matrix Has Error Logistic Regression">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Log Observed Vs Predicted Storage Cost Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_log_observed_vs_predicted_storage_cost_glm_gamma_log.png" alt="Evaluation Log Observed Vs Predicted Storage Cost Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Log Observed Vs Predicted Storage Cost Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_log_observed_vs_predicted_storage_cost_ols_log_linear.png" alt="Evaluation Log Observed Vs Predicted Storage Cost Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Log Observed Vs Predicted Transfer Duration Sec Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_log_observed_vs_predicted_transfer_duration_sec_glm_gamma_log.png" alt="Evaluation Log Observed Vs Predicted Transfer Duration Sec Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Log Observed Vs Predicted Transfer Duration Sec Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_log_observed_vs_predicted_transfer_duration_sec_ols_log_linear.png" alt="Evaluation Log Observed Vs Predicted Transfer Duration Sec Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Metric Deltas</h3>
+            <img src="../plots/model_evaluation/evaluation_metric_deltas.png" alt="Evaluation Metric Deltas">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Metrics Summary</h3>
+            <img src="../plots/model_evaluation/evaluation_metrics_summary.png" alt="Evaluation Metrics Summary">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Observed Vs Predicted Storage Cost Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_observed_vs_predicted_storage_cost_glm_gamma_log.png" alt="Evaluation Observed Vs Predicted Storage Cost Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Observed Vs Predicted Storage Cost Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_observed_vs_predicted_storage_cost_ols_log_linear.png" alt="Evaluation Observed Vs Predicted Storage Cost Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Observed Vs Predicted Transfer Duration Sec Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_observed_vs_predicted_transfer_duration_sec_glm_gamma_log.png" alt="Evaluation Observed Vs Predicted Transfer Duration Sec Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Observed Vs Predicted Transfer Duration Sec Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_observed_vs_predicted_transfer_duration_sec_ols_log_linear.png" alt="Evaluation Observed Vs Predicted Transfer Duration Sec Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Precision Recall Curve Has Error Logistic Regression</h3>
+            <img src="../plots/model_evaluation/evaluation_precision_recall_curve_has_error_logistic_regression.png" alt="Evaluation Precision Recall Curve Has Error Logistic Regression">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Probability Distribution Has Error Logistic Regression</h3>
+            <img src="../plots/model_evaluation/evaluation_probability_distribution_has_error_logistic_regression.png" alt="Evaluation Probability Distribution Has Error Logistic Regression">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residual Histogram Storage Cost Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_residual_histogram_storage_cost_glm_gamma_log.png" alt="Evaluation Residual Histogram Storage Cost Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residual Histogram Storage Cost Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_residual_histogram_storage_cost_ols_log_linear.png" alt="Evaluation Residual Histogram Storage Cost Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residual Histogram Transfer Duration Sec Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_residual_histogram_transfer_duration_sec_glm_gamma_log.png" alt="Evaluation Residual Histogram Transfer Duration Sec Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residual Histogram Transfer Duration Sec Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_residual_histogram_transfer_duration_sec_ols_log_linear.png" alt="Evaluation Residual Histogram Transfer Duration Sec Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residuals Vs Predicted Storage Cost Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_residuals_vs_predicted_storage_cost_glm_gamma_log.png" alt="Evaluation Residuals Vs Predicted Storage Cost Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residuals Vs Predicted Storage Cost Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_residuals_vs_predicted_storage_cost_ols_log_linear.png" alt="Evaluation Residuals Vs Predicted Storage Cost Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residuals Vs Predicted Transfer Duration Sec Glm Gamma Log</h3>
+            <img src="../plots/model_evaluation/evaluation_residuals_vs_predicted_transfer_duration_sec_glm_gamma_log.png" alt="Evaluation Residuals Vs Predicted Transfer Duration Sec Glm Gamma Log">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Residuals Vs Predicted Transfer Duration Sec Ols Log Linear</h3>
+            <img src="../plots/model_evaluation/evaluation_residuals_vs_predicted_transfer_duration_sec_ols_log_linear.png" alt="Evaluation Residuals Vs Predicted Transfer Duration Sec Ols Log Linear">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Evaluation Roc Curve Has Error Logistic Regression</h3>
+            <img src="../plots/model_evaluation/evaluation_roc_curve_has_error_logistic_regression.png" alt="Evaluation Roc Curve Has Error Logistic Regression">
+        </div>
+        
+        </div>
+    </section>
+    
+        <section class='card'>
+            <h2>Guía de interpretación</h2>
+            <p>
+                Para modelos de regresión, valores altos de <strong>R²</strong> y
+                errores bajos en <strong>MAE/RMSE</strong> indican mejor
+                generalización. Los residuos deben estar centrados cerca de cero
+                y sin patrones fuertes frente al valor estimado.
+            </p>
+            <p>
+                Para clasificación, <strong>ROC AUC</strong> mide capacidad de
+                discriminación, mientras que <strong>F1</strong>,
+                <strong>precision</strong> y <strong>recall</strong> son más
+                sensibles al desbalance de clases. Si ROC AUC es aceptable pero
+                F1 es bajo, conviene revisar el umbral de decisión.
+            </p>
+            <p>
+                Los deltas comparan evaluación contra entrenamiento. Una caída
+                relevante en R², ROC AUC o F1 puede indicar drift, cambio en la
+                simulación o necesidad de reentrenamiento.
+            </p>
+        </section>
+        
+        <section class='card'>
+            <h2>Evidencia exportada</h2>
+            <p>
+                Además del HTML, esta fase exporta archivos de evidencia para
+                auditoría y trazabilidad:
+            </p>
+            <ul>
+                <li><code>model_evaluation_metrics.csv</code></li>
+                <li><code>model_evaluation_metrics.json</code></li>
+                <li><code>model_evaluation_comparison.csv</code></li>
+                <li><code>model_evaluation_status.csv</code></li>
+                <li><code>model_evaluation_export_manifest.json</code></li>
+                <li><code>predictions/*.csv</code> con predicciones por modelo</li>
+            </ul>
+        </section>
+        
+    </body>
+    </html>
+    

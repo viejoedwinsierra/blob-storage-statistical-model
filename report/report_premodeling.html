@@ -1,0 +1,956 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Reporte de pre-modelamiento - Blob Storage Monte Carlo</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 32px;
+                color: #2c3e50;
+                background: #f8f9fa;
+            }
+
+            h1 {
+                margin-bottom: 6px;
+                color: #1f3a56;
+            }
+
+            h2 {
+                color: #1f3a56;
+                margin-top: 0;
+                border-bottom: 2px solid #e8eef3;
+                padding-bottom: 8px;
+            }
+
+            h3 {
+                margin-top: 0;
+                color: #2c3e50;
+                font-size: 15px;
+            }
+
+            .subtitle {
+                color: #666;
+                margin-bottom: 24px;
+            }
+
+            .card {
+                background: white;
+                padding: 20px;
+                margin-bottom: 24px;
+                border-radius: 10px;
+                box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+            }
+
+            .note {
+                background: #eef6ff;
+                border-left: 5px solid #2c7be5;
+                padding: 14px;
+                border-radius: 6px;
+                margin-bottom: 24px;
+                font-size: 14px;
+            }
+
+            .summary-card {
+                border-left: 5px solid #198754;
+            }
+
+            .section-desc {
+                color: #555;
+                font-size: 14px;
+                margin-top: -4px;
+                margin-bottom: 14px;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                font-size: 13px;
+            }
+
+            th {
+                background-color: #2c3e50;
+                color: white;
+                padding: 8px;
+                text-align: left;
+                white-space: nowrap;
+            }
+
+            td {
+                border: 1px solid #ddd;
+                padding: 7px;
+                white-space: nowrap;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 20px;
+            }
+
+            .plot-card {
+                background: #ffffff;
+                padding: 16px;
+                border-radius: 8px;
+                border: 1px solid #e4e4e4;
+            }
+
+            img {
+                max-width: 100%;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background: white;
+            }
+
+            @media (max-width: 900px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Reporte de pre-modelamiento - Blob Storage Monte Carlo</h1>
+        <p class="subtitle">
+            Fase de preparación de datos para modelamiento estadístico.
+        </p>
+
+        <div class="note">
+            Este reporte documenta datasets preparados para modelamiento estadístico. No contiene entrenamiento de modelos ni métricas finales.
+        </div>
+
+        
+        <section class='card'>
+            <h2>Objetivo del reporte de pre-modelamiento</h2>
+            <p>
+                Este reporte documenta la construcción de datasets por variable
+                objetivo. No entrena modelos ni reporta métricas predictivas.
+                Su finalidad es dejar evidencia reproducible de variables,
+                transformaciones y estructura final de entrada para la fase
+                de modelamiento estadístico.
+            </p>
+        </section>
+        
+    <section class="card ">
+        <h2>1. Plan de variables por target</h2>
+        
+        <div class="table-container">
+            <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>target</th>
+      <th>variable</th>
+      <th>role</th>
+      <th>included</th>
+      <th>reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>transfer_duration_sec</td>
+      <td>target</td>
+      <td>SI</td>
+      <td>Duración positiva, asimétrica y sensible a tamaño/carga.</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>size_mb</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>transfer_speed_mbps</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>created_hour</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>hourly_arrival_count</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>hourly_capacity</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>congestion_factor</td>
+      <td>candidate_derived</td>
+      <td>SI</td>
+      <td>variable derivada; revisar redundancia en documentación</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>file_type</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>storage_tier</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>time_slot</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>storage_cost</td>
+      <td>target</td>
+      <td>SI</td>
+      <td>Costo positivo y dominado por tamaño/retención.</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>size_mb</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>days_stored</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>days_since_last_access</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>storage_tier</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>file_type</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>created_hour</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>has_error</td>
+      <td>target</td>
+      <td>SI</td>
+      <td>Evento binario; no usar componentes de error ni severidad.</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>size_mb</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>transfer_speed_mbps</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>created_hour</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>hourly_arrival_count</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>hourly_capacity</td>
+      <td>candidate_numeric</td>
+      <td>SI</td>
+      <td>variable numérica candidata</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>congestion_factor</td>
+      <td>candidate_derived</td>
+      <td>SI</td>
+      <td>variable derivada; revisar redundancia en documentación</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>file_type</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>storage_tier</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>time_slot</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week</td>
+      <td>candidate_categorical</td>
+      <td>SI</td>
+      <td>variable categórica codificable</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </section>
+    
+    <section class="card ">
+        <h2>2. Resumen de datasets preparados</h2>
+        
+        <div class="table-container">
+            <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>target</th>
+      <th>problem_type</th>
+      <th>n_rows</th>
+      <th>n_features</th>
+      <th>target_output_name</th>
+      <th>log_transform_target</th>
+      <th>encoded_categoricals</th>
+      <th>transformed_columns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>regression_positive</td>
+      <td>329651</td>
+      <td>22</td>
+      <td>log1p_transfer_duration_sec</td>
+      <td>True</td>
+      <td>file_type, storage_tier, time_slot, day_of_week</td>
+      <td>log1p_size_mb, log1p_transfer_speed_mbps</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>regression_positive</td>
+      <td>329651</td>
+      <td>10</td>
+      <td>log1p_storage_cost</td>
+      <td>True</td>
+      <td>storage_tier, file_type</td>
+      <td>log1p_size_mb</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>classification_binary</td>
+      <td>329651</td>
+      <td>22</td>
+      <td>has_error</td>
+      <td>False</td>
+      <td>file_type, storage_tier, time_slot, day_of_week</td>
+      <td>log1p_size_mb, log1p_transfer_speed_mbps</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </section>
+    
+    <section class="card ">
+        <h2>3. Resumen de variables finales</h2>
+        
+        <div class="table-container">
+            <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>target</th>
+      <th>feature</th>
+      <th>dtype</th>
+      <th>null_count</th>
+      <th>unique_count</th>
+      <th>mean</th>
+      <th>std</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>size_mb</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>321845</td>
+      <td>46.4254</td>
+      <td>108.9358</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>transfer_speed_mbps</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>328512</td>
+      <td>26.9018</td>
+      <td>22.5425</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>created_hour</td>
+      <td>int32</td>
+      <td>0</td>
+      <td>16</td>
+      <td>13.0821</td>
+      <td>5.4857</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>hourly_arrival_count</td>
+      <td>int64</td>
+      <td>0</td>
+      <td>396</td>
+      <td>1105.5233</td>
+      <td>685.4453</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>hourly_capacity</td>
+      <td>int64</td>
+      <td>0</td>
+      <td>344</td>
+      <td>803.1606</td>
+      <td>218.9438</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>congestion_factor</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>120</td>
+      <td>2.3135</td>
+      <td>1.6581</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>log1p_size_mb</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>321845</td>
+      <td>2.2638</td>
+      <td>1.6577</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>log1p_transfer_speed_mbps</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>328512</td>
+      <td>3.0788</td>
+      <td>0.7053</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>file_type_json</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2498</td>
+      <td>0.4329</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>file_type_mp4</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2008</td>
+      <td>0.4006</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>file_type_pdf</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2512</td>
+      <td>0.4337</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>storage_tier_cool</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4239</td>
+      <td>0.4942</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>storage_tier_hot</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4281</td>
+      <td>0.4948</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>time_slot_mañana</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2375</td>
+      <td>0.4256</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>time_slot_noche</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2113</td>
+      <td>0.4082</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>time_slot_tarde</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4469</td>
+      <td>0.4972</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week_monday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.1335</td>
+      <td>0.3402</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week_saturday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.0878</td>
+      <td>0.283</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week_sunday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.0439</td>
+      <td>0.2048</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week_thursday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2029</td>
+      <td>0.4021</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week_tuesday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.1553</td>
+      <td>0.3622</td>
+    </tr>
+    <tr>
+      <td>transfer_duration_sec</td>
+      <td>day_of_week_wednesday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2092</td>
+      <td>0.4067</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>size_mb</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>321845</td>
+      <td>46.4254</td>
+      <td>108.9358</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>days_stored</td>
+      <td>int64</td>
+      <td>0</td>
+      <td>180</td>
+      <td>90.4235</td>
+      <td>51.9586</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>days_since_last_access</td>
+      <td>int64</td>
+      <td>0</td>
+      <td>178</td>
+      <td>46.5733</td>
+      <td>37.0559</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>created_hour</td>
+      <td>int32</td>
+      <td>0</td>
+      <td>16</td>
+      <td>13.0821</td>
+      <td>5.4857</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>log1p_size_mb</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>321845</td>
+      <td>2.2638</td>
+      <td>1.6577</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>storage_tier_cool</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4239</td>
+      <td>0.4942</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>storage_tier_hot</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4281</td>
+      <td>0.4948</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>file_type_json</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2498</td>
+      <td>0.4329</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>file_type_mp4</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2008</td>
+      <td>0.4006</td>
+    </tr>
+    <tr>
+      <td>storage_cost</td>
+      <td>file_type_pdf</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2512</td>
+      <td>0.4337</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>size_mb</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>321845</td>
+      <td>46.4254</td>
+      <td>108.9358</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>transfer_speed_mbps</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>328512</td>
+      <td>26.9018</td>
+      <td>22.5425</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>created_hour</td>
+      <td>int32</td>
+      <td>0</td>
+      <td>16</td>
+      <td>13.0821</td>
+      <td>5.4857</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>hourly_arrival_count</td>
+      <td>int64</td>
+      <td>0</td>
+      <td>396</td>
+      <td>1105.5233</td>
+      <td>685.4453</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>hourly_capacity</td>
+      <td>int64</td>
+      <td>0</td>
+      <td>344</td>
+      <td>803.1606</td>
+      <td>218.9438</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>congestion_factor</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>120</td>
+      <td>2.3135</td>
+      <td>1.6581</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>log1p_size_mb</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>321845</td>
+      <td>2.2638</td>
+      <td>1.6577</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>log1p_transfer_speed_mbps</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>328512</td>
+      <td>3.0788</td>
+      <td>0.7053</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>file_type_json</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2498</td>
+      <td>0.4329</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>file_type_mp4</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2008</td>
+      <td>0.4006</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>file_type_pdf</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2512</td>
+      <td>0.4337</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>storage_tier_cool</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4239</td>
+      <td>0.4942</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>storage_tier_hot</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4281</td>
+      <td>0.4948</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>time_slot_mañana</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2375</td>
+      <td>0.4256</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>time_slot_noche</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2113</td>
+      <td>0.4082</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>time_slot_tarde</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.4469</td>
+      <td>0.4972</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week_monday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.1335</td>
+      <td>0.3402</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week_saturday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.0878</td>
+      <td>0.283</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week_sunday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.0439</td>
+      <td>0.2048</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week_thursday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2029</td>
+      <td>0.4021</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week_tuesday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.1553</td>
+      <td>0.3622</td>
+    </tr>
+    <tr>
+      <td>has_error</td>
+      <td>day_of_week_wednesday</td>
+      <td>float64</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0.2092</td>
+      <td>0.4067</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </section>
+    
+    <section class="card">
+        <h2>8. Gráficos univariados</h2>
+        <p class="section-desc">
+            Histogramas, histogramas log1p, boxplots, boxplots recortados,
+            barras de frecuencia y conteo temporal de muestras. No se incluyen
+            cruces entre variables.
+        </p>
+        <div class="grid">
+    
+        <div class="plot-card">
+            <h3>Premodeling Target Transfer Duration Sec</h3>
+            <img src="../plots/premodeling/premodeling_target_transfer_duration_sec.png" alt="Premodeling Target Transfer Duration Sec">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Premodeling Target Storage Cost</h3>
+            <img src="../plots/premodeling/premodeling_target_storage_cost.png" alt="Premodeling Target Storage Cost">
+        </div>
+        
+        <div class="plot-card">
+            <h3>Premodeling Target Has Error</h3>
+            <img src="../plots/premodeling/premodeling_target_has_error.png" alt="Premodeling Target Has Error">
+        </div>
+        
+        </div>
+    </section>
+    
+    </body>
+    </html>
+    
