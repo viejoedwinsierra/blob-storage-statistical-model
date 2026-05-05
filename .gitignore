@@ -1,0 +1,14 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# artefactos generados
+output/
+*.pkl
+*.pickle
+*.joblib
+
+# archivos pesados o regenerables
+*.zip
+*.csv
+*.png
