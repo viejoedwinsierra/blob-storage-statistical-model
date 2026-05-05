@@ -11,4 +11,3 @@ output/
 # archivos pesados o regenerables
 *.zip
 *.csv
-*.png
