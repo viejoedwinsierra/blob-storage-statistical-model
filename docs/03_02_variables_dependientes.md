@@ -1,11 +1,9 @@
----
 🏠 [Inicio](../README.md)
 
 ⬅️ [Dataset](03_estructura_dataset.md)
-
 ⬅️ [Variables Independientes](03_01_variables_independientes.md)
-
 ➡️ [Parámetros de Simulación](04_parametros_simulacion.md)
+
 ---
 
 # Variables Dependientes del Sistema
@@ -16,9 +14,9 @@ Las variables dependientes representan los resultados observables a nivel de arc
 
 A diferencia de un enfoque agregado por tiempo, este modelo define variables dependientes a nivel de **instancia (archivo)**, permitiendo:
 
-- análisis estadístico directo
-- modelamiento con machine learning
-- construcción posterior de métricas agregadas
+* análisis estadístico directo
+* modelamiento con machine learning
+* construcción posterior de métricas agregadas
 
 ---
 
@@ -26,79 +24,178 @@ A diferencia de un enfoque agregado por tiempo, este modelo define variables dep
 
 El modelo se construye a nivel micro (archivo), donde:
 
-- cada observación representa una unidad de almacenamiento
-- las variables dependientes capturan el resultado del comportamiento del sistema sobre cada archivo
+* cada observación representa una unidad de almacenamiento
+* las variables dependientes capturan el resultado del comportamiento del sistema
 
-Por lo tanto:
-
-> Las variables agregadas del sistema (volumen total, tasas, costos globales) se derivan a partir de las variables a nivel archivo.
+> Las variables agregadas del sistema se derivan a partir de estas variables.
 
 ---
 
 ## 3. Variables Dependientes Definidas
 
-### 3.1 Costo de almacenamiento
+---
 
-- `storage_cost`: costo individual del archivo
+### 3.1 Costo de almacenamiento (`storage_cost`)
 
 Representa:
 
-- impacto económico por archivo
-- efecto combinado de tamaño, tiempo y tipo de almacenamiento
+* impacto económico por archivo
+* efecto combinado de tamaño, tiempo y tipo de almacenamiento
+
+---
+
+#### 📊 Evidencia descriptiva
+
+![Histograma costo](../img/descriptive/storage_cost_histogram.png)
+
+![Histograma log costo](../img/descriptive/storage_cost_log_histogram.png)
+
+![Boxplot costo](../img/descriptive/storage_cost_boxplot.png)
+
+---
+
+#### 📊 Evidencia multivariable
+
+![Costo vs tamaño](../img/advanced/cost_vs_size.png)
+
+![Costo vs tiempo](../img/advanced/cost_vs_days.png)
+
+![Costo por tier](../img/advanced/cost_by_tier_boxplot.png)
+
+---
+
+#### 🧠 Interpretación
+
+* Distribución altamente asimétrica (cola larga)
+* Fuerte dependencia de:
+
+  * tamaño
+  * tiempo
+  * nivel de almacenamiento
+
+---
+
+#### 📈 Valores esperados vs observados
+
+| Comportamiento        | Esperado  | Observado      |
+| --------------------- | --------- | -------------- |
+| Relación costo-tamaño | Positiva  | ✔ Confirmado   |
+| Relación costo-tiempo | Creciente | ✔ Confirmado   |
+| Diferencia por tier   | Alta      | ✔ Confirmado   |
+| Distribución normal   | No        | ✔ No se cumple |
+
+---
+
+#### 👉 Implicación en modelamiento
+
+* No usar OLS en escala original
+* Usar:
+
+  * GLM Gamma
+  * modelos log-lineales
 
 ---
 
 ### 3.2 Estado de calidad del archivo
 
-- `is_duplicate`: indicador de duplicidad derivado de hash o error
-- `has_error`: indicador general de error
-- `is_orphan`: inconsistencia, por ejemplo JSON sin PDF
+Variables:
 
-Estas variables permiten modelar:
+* `has_error`
+* `is_duplicate`
+* `is_orphan`
 
-- veracidad del dato
-- calidad del sistema
+---
+
+#### 📊 Evidencia descriptiva
+
+![Errores](../img/descriptive/has_error_bar_chart.png)
+
+---
+
+#### 📊 Evidencia multivariable
+
+![Error vs tamaño](../img/advanced/error_vs_size.png)
+
+![Error vs tiempo](../img/advanced/error_vs_days.png)
+
+---
+
+#### 🧠 Interpretación
+
+* Eventos poco frecuentes
+* Distribución desbalanceada
+
+---
+
+#### 📈 Valores esperados vs observados
+
+| Comportamiento             | Esperado | Observado    |
+| -------------------------- | -------- | ------------ |
+| Baja frecuencia de errores | Sí       | ✔ Confirmado |
+| Relación con tamaño        | Posible  | ✔ Parcial    |
+| Distribución balanceada    | No       | ✔ No         |
+
+---
+
+#### 👉 Implicación en modelamiento
+
+* Problema de clasificación desbalanceada
+* Métrica clave:
+
+  * Recall
+* Ajuste necesario:
+
+  * threshold
 
 ---
 
 ### 3.3 Estado operativo
 
-- `is_moved`: indica si el archivo fue movido entre tiers
-- `is_active`: indica si el archivo está en uso, derivable de acceso
+Variables:
 
-Estas variables representan el comportamiento del archivo dentro del ciclo de vida.
+* `is_moved`
+* `is_active`
+
+---
+
+#### 📊 Evidencia multivariable
+
+![Movimiento vs tiempo](../img/advanced/move_vs_days.png)
+
+![Actividad vs acceso](../img/advanced/active_vs_access.png)
+
+---
+
+#### 🧠 Interpretación
+
+* Relacionadas con ciclo de vida del archivo
+* Influenciadas por acceso y tiempo
+
+---
+
+#### 📈 Valores esperados vs observados
+
+| Comportamiento                  | Esperado | Observado    |
+| ------------------------------- | -------- | ------------ |
+| Movimiento con el tiempo        | Sí       | ✔ Confirmado |
+| Actividad dependiente de acceso | Sí       | ✔ Confirmado |
+
+---
+
+#### 👉 Implicación
+
+* Variables útiles para:
+
+  * optimización de almacenamiento
+  * lifecycle management
 
 ---
 
 ## 4. Variables derivadas a nivel sistema
 
-A partir de las variables anteriores se pueden construir métricas agregadas.
+A partir de las variables anteriores:
 
-### 4.1 Volumen
-
-$$
-V_{total} = \sum size_{gb}
-$$
-
-$$
-V_{useful}
-$$
-
-$$
-V_{redundant}
-$$
-
----
-
-### 4.2 Calidad
-
-- `error_rate`
-- `dup_rate`
-- `inconsistency_rate`
-
----
-
-### 4.3 Costo
+### 4.1 Costo total
 
 $$
 C_{total} = \sum storage_{cost}
@@ -106,19 +203,19 @@ $$
 
 ---
 
-### 4.4 Estado del sistema
+### 4.2 Tasa de error
 
 $$
-N_t = \text{número de archivos}
+error_rate = \frac{\sum has_error}{N}
 $$
 
-$$
-D_t = \text{duplicados}
-$$
+---
 
-$$
-U_t = \text{almacenamiento total}
-$$
+### 4.3 Estado del sistema
+
+* volumen total
+* redundancia
+* eficiencia
 
 ---
 
@@ -126,78 +223,57 @@ $$
 
 Las variables dependientes permiten:
 
-- entrenar modelos de regresión para costo
-- entrenar modelos de clasificación para errores y duplicados
-- construir métricas agregadas del sistema
-- analizar eficiencia del almacenamiento
+### Regresión
+
+$$
+Y = storage_{cost}
+$$
 
 ---
 
-## 6. Relación con el almacenamiento
+### Clasificación
 
-El almacenamiento se modela a nivel de archivo:
-
-- cada archivo contribuye al volumen total
-- cada archivo genera costo
-- cada archivo puede contener errores
-
-El comportamiento global emerge de la agregación.
+$$
+Y = has_error
+$$
 
 ---
 
-## 7. Relación con el ciclo de vida
+## 6. Relación con el sistema real
 
-El ciclo de vida del dato se observa en cada archivo:
+En entornos empresariales:
 
-- creación
-- almacenamiento
-- acceso
-- modificación
-- posible movimiento
+* el costo se factura agregado
+* pero se genera a nivel archivo
 
-Las variables dependientes capturan el resultado de este proceso.
+Este modelo permite:
 
----
-
-## 8. Relación con las 5Vs
-
-A nivel archivo:
-
-- Volume → `size_gb`
-- Velocity → transferencia
-- Variety → `file_type`
-- Veracity → errores
-- Value → `storage_cost`
-
-A nivel agregado:
-
-- Volume → suma de tamaños
-- Value → costo total
+* explicar costos
+* simular escenarios
+* optimizar decisiones
 
 ---
 
-## 9. Principio clave
+## 7. Principio clave
 
-> El sistema no se modela directamente: se modelan sus componentes (archivos), y el comportamiento global emerge de su agregación.
+> El sistema no se modela directamente: se modelan sus componentes, y el comportamiento global emerge de su agregación.
 
 ---
 
-## 10. Conclusión
+## 8. Conclusión
 
 Las variables dependientes permiten:
 
-- modelar el sistema desde una perspectiva micro
-- construir métricas agregadas coherentes
-- integrar análisis estadístico y machine learning
-
-Esto garantiza consistencia entre dataset, modelo y análisis.
+* cuantificar comportamiento del sistema
+* validar decisiones de modelamiento
+* conectar datos con impacto real (costo)
 
 ---
 
 🏠 [Inicio](../README.md)
 
 ⬅️ [Dataset](03_estructura_dataset.md)
-
 ⬅️ [Variables Independientes](03_01_variables_independientes.md)
-
 ➡️ [Parámetros de Simulación](04_parametros_simulacion.md)
+
+---
